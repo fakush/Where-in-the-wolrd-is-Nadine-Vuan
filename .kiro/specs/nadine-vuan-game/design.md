@@ -2,9 +2,9 @@
 
 ## Overview
 
-The "Where in the World is Nadine Vuan?" game is a single-page web application that recreates the classic Carmen Sandiego detective adventure experience. The game uses vanilla HTML5, CSS3, and JavaScript to create an immersive detective experience where players track down Nadine Vuan across 11 global cities by gathering clues from local informants.
+The "Where in the World is Nadine Vuan?" game is a single-page web application that recreates the classic Carmen Sandiego detective adventure experience. The game uses vanilla HTML5, CSS3, and JavaScript to create an immersive detective experience where players follow a 5-city journey to track down Nadine Vuan, with clues about each next destination provided by local informants.
 
-The application follows a state-driven architecture with distinct game phases: introduction, investigation, travel, and conclusion. The design emphasizes the retro 1980s aesthetic with Carmen Sandiego-style UI elements, retro fonts, and smooth animations.
+The game features a scoring system (3 points for hard clues, 2 for medium, 1 for easy) and a three-attempt failure system. Players start at a random city and must successfully navigate through 4 cities before reaching the final destination of Buenos Aires. The application follows a state-driven architecture with distinct game phases: introduction, investigation, travel, and conclusion. The design emphasizes the retro 1980s aesthetic with Carmen Sandiego-style UI elements, retro fonts, and smooth animations.
 
 ## Architecture
 
@@ -30,10 +30,11 @@ src/
 ### State Management
 The game uses a centralized state object that tracks:
 - Current game phase (intro, investigation, travel, conclusion)
-- Player location and visited cities
-- Collected clues and investigation progress
-- Game statistics (time, attempts, score)
-- UI state (active screens, animations)
+- Player location and predetermined 5-city route
+- Collected clues about next destinations and investigation progress
+- Game statistics (score, remaining attempts out of 3, cities completed)
+- Current clue difficulty level (hard → medium → easy progression)
+- UI state (active screens, animations, evidence list)
 
 ## Components and Interfaces
 
@@ -76,13 +77,14 @@ The game uses a centralized state object that tracks:
 {
   phase: 'intro' | 'investigation' | 'travel' | 'conclusion',
   currentCity: string,
-  visitedCities: string[],
+  cityRoute: string[], // Predetermined 5-city journey ending with Buenos Aires
+  currentCityIndex: number, // Position in the route (0-4)
   collectedClues: Clue[],
+  currentClueLevel: 'hard' | 'medium' | 'easy',
   gameStats: {
-    startTime: Date,
-    citiesVisited: number,
-    correctDeductions: number,
-    attemptsRemaining: number
+    score: number,
+    attemptsRemaining: number, // Starts at 3
+    citiesCompleted: number
   },
   isGameComplete: boolean,
   hasWon: boolean
@@ -107,8 +109,10 @@ The game uses a centralized state object that tracks:
 ```javascript
 {
   text: string,
-  difficulty: 'easy' | 'medium' | 'difficult',
-  sourceCity: string,
+  difficulty: 'easy' | 'medium' | 'hard',
+  targetCity: string, // The next destination this clue points to
+  sourceCity: string, // The city where this clue was obtained
+  pointValue: number, // 3 for hard, 2 for medium, 1 for easy
   timestamp: Date
 }
 ```
@@ -131,40 +135,40 @@ The game uses a centralized state object that tracks:
 ### Property Reflection
 
 After analyzing all acceptance criteria, several properties can be consolidated to eliminate redundancy:
-- Game initialization properties (1.2, 1.4, 6.3) can be combined into a comprehensive reset property
-- Clue handling properties (2.2, 2.4, 2.5) can be unified into clue system consistency
-- Travel system properties (3.2, 3.3, 3.4) can be merged into route management integrity
-- State update properties (4.3, 4.5) can be combined into progress tracking consistency
+- Route generation and starting city selection can be combined into journey initialization
+- Scoring and attempt tracking can be unified into game mechanics consistency
+- Clue progression and storage can be merged into clue system integrity
+- Game over conditions can be consolidated into failure handling
 
 ### Core Properties
 
-**Property 1: Game initialization consistency**
-*For any* game initialization, all state variables should be reset to default values and a valid starting city should be randomly selected from available non-final cities
-**Validates: Requirements 1.2, 1.4, 6.3**
+**Property 1: Journey initialization consistency**
+*For any* game initialization, the system should generate a valid 5-city route ending with Buenos Aires and select a random starting city from the 10 non-Buenos Aires locations
+**Validates: Requirements 1.3, 1.4**
 
-**Property 2: City scene asset consistency**
-*For any* valid city ID, the system should load the correct scene image and informant data matching that city's configuration
-**Validates: Requirements 2.1, 7.2**
+**Property 2: Clue progression integrity**
+*For any* city in the route, clues should be provided in the correct sequence (hard → medium → easy) and point to the next destination in the predetermined route
+**Validates: Requirements 2.2, 2.4**
 
-**Property 3: Clue system integrity**
-*For any* city with available clues, the system should randomly select clues from the appropriate difficulty tiers and properly store them in the player's collection
-**Validates: Requirements 2.2, 2.4, 2.5**
+**Property 3: Scoring system consistency**
+*For any* correct guess, the system should award points based on the current clue difficulty (3 for hard, 2 for medium, 1 for easy) and advance to the next city in the route
+**Validates: Requirements 3.2**
 
-**Property 4: Route management integrity**
-*For any* travel decision, the selected city should be added to the visited list and prevented from future selection, maintaining route uniqueness
-**Validates: Requirements 3.2, 3.3, 3.4**
+**Property 4: Attempt tracking reliability**
+*For any* incorrect guess, the system should deduct exactly one attempt, display the "not here" scene, and maintain the current game state without advancing
+**Validates: Requirements 3.3, 4.2**
 
-**Property 5: Game phase transitions**
-*For any* valid game action, the system should transition to the appropriate game phase and update the interface accordingly
-**Validates: Requirements 3.5, 4.5**
+**Property 5: Game over condition accuracy**
+*For any* game state where attempts reach zero, the system should trigger game over and display the final score
+**Validates: Requirements 4.5, 6.1**
 
-**Property 6: Progress tracking consistency**
-*For any* game state change, all progress statistics should accurately reflect the current game status including cities visited and clues collected
-**Validates: Requirements 4.3, 4.5**
+**Property 6: Journey completion detection**
+*For any* game where 4 cities are successfully completed, Buenos Aires should be presented as the final destination
+**Validates: Requirements 5.1**
 
-**Property 7: Feedback system reliability**
-*For any* player action (correct or incorrect), the system should provide appropriate feedback without terminating the game prematurely
-**Validates: Requirements 4.1, 4.2**
+**Property 7: Evidence collection consistency**
+*For any* clue presented, it should be stored in the evidence list with correct metadata (difficulty, target city, point value) and be accessible through the evidence interface
+**Validates: Requirements 2.4, 2.6**
 
 **Property 8: Session isolation**
 *For any* restart operation, the new game session should be completely independent with fresh randomized elements and no data contamination from previous sessions
@@ -174,9 +178,9 @@ After analyzing all acceptance criteria, several properties can be consolidated 
 *For any* JSON data access or user input, the system should validate the data structure and handle invalid inputs gracefully without breaking game flow
 **Validates: Requirements 8.1, 8.3, 8.4**
 
-**Property 10: Randomization fairness**
-*For any* random selection process (starting cities, clues), all available options should have equal probability of selection over multiple iterations
-**Validates: Requirements 8.2**
+**Property 10: Starting city randomization fairness**
+*For any* series of game initializations, all 10 non-Buenos Aires cities should appear as starting cities with roughly equal probability
+**Validates: Requirements 1.3, 8.2**
 
 **Property 11: State persistence reliability**
 *For any* game state change, the data should be properly persisted to browser storage and accurately restored when needed

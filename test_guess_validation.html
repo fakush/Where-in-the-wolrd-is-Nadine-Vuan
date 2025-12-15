@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess Validation and Scoring Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Guess Validation and Scoring System Test</h1>
+    <div id="test-results"></div>
+
+    <script type="module">
+        import { GameController } from './src/modules/GameController.js';
+        import { GameState } from './src/modules/GameState.js';
+        import { UIManager } from './src/modules/UIManager.js';
+        import { ClueSystem } from './src/modules/ClueSystem.js';
+        import { FailureHandler } from './src/modules/FailureHandler.js';
+        import { RandomizationSystem } from './src/modules/RandomizationSystem.js';
+        import { ErrorHandler } from './src/modules/ErrorHandler.js';
+
+        const resultsDiv = document.getElementById('test-results');
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            resultsDiv.appendChild(div);
+        }
+
+        async function runTests() {
+            try {
+                addResult('Starting Guess Validation and Scoring System Tests...', 'info');
+
+                // Create test game data
+                const testGameData = {
+                    cities: [
+                        { id: 'tokyo', name: 'Tokyo', country: 'Japan', is_final: false, 
+                          clues: { easy: ['Test clue'], medium: ['Test clue'], difficult: ['Test clue'] },
+                          informant: { name: 'Test', greeting: 'Hello' },
+                          not_here_response: 'Not here' },
+                        { id: 'london', name: 'London', country: 'UK', is_final: false,
+                          clues: { easy: ['Test clue'], medium: ['Test clue'], difficult: ['Test clue'] },
+                          informant: { name: 'Test', greeting: 'Hello' },
+                          not_here_response: 'Not here' },
+                        { id: 'buenosAires', name: 'Buenos Aires', country: 'Argentina', is_final: true,
+                          clues: { easy: ['Test clue'], medium: ['Test clue'], difficult: ['Test clue'] },
+                          informant: { name: 'Test', greeting: 'Hello' },
+                          not_here_response: 'Not here',
+                          final_encounter: { nadine_speech: 'Found!', steve_response: 'Great!', victory_message: 'Won!' } }
+                    ]
+                };
+
+                // Initialize game components
+                const gameState = new GameState();
+                const errorHandler = new ErrorHandler();
+                const uiManager = new UIManager(null); // Mock UI manager
+                const clueSystem = new ClueSystem(gameState);
+                const failureHandler = new FailureHandler(gameState);
+                const randomizationSystem = new RandomizationSystem();
+                
+                const gameController = new GameController();
+                gameController.gameState = gameState;
+                gameController.uiManager = uiManager;
+                gameController.clueSystem = clueSystem;
+                gameController.failureHandler = failureHandler;
+                gameController.randomizationSystem = randomizationSystem;
+                gameController.errorHandler = errorHandler;
+
+                // Mock UI methods to avoid errors
+                uiManager.showFeedbackMessage = (msg, type) => addResult(`UI: ${msg}`, type === 'success' ? 'pass' : 'info');
+                uiManager.showNotHereScene = (cityData) => addResult(`UI: Showing not here scene for ${cityData.name}`, 'info');
+                uiManager.displayInformantDialogue = (text, name, type) => addResult(`UI: ${name}: ${text}`, 'info');
+                uiManager.animateTravel = (from, to, callback) => { addResult(`UI: Travel animation ${from} -> ${to}`, 'info'); callback(); };
+                uiManager.showScreen = (screen) => addResult(`UI: Showing screen ${screen}`, 'info');
+                uiManager.updateInvestigationScreen = (cityId) => addResult(`UI: Updated investigation screen for ${cityId}`, 'info');
+
+                // Initialize game state with test data
+                gameState.gameData = testGameData;
+                gameState.initializeGame(testGameData);
+
+                addResult(`Game initialized with route: ${gameState.cityRoute.join(' -> ')}`, 'pass');
+                addResult(`Starting city: ${gameState.currentCity}`, 'info');
+                addResult(`Current city index: ${gameState.currentCityIndex}`, 'info');
+
+                // Test 1: Validate guess against route
+                const nextCity = gameState.getNextCityInRoute();
+                addResult(`Next city in route: ${nextCity}`, 'info');
+
+                const correctGuessResult = gameController.validateGuessAgainstRoute(nextCity);
+                if (correctGuessResult.isCorrect) {
+                    addResult('✓ Correct guess validation works', 'pass');
+                } else {
+                    addResult('✗ Correct guess validation failed', 'fail');
+                }
+
+                const incorrectGuessResult = gameController.validateGuessAgainstRoute('invalid_city');
+                if (!incorrectGuessResult.isCorrect) {
+                    addResult('✓ Incorrect guess validation works', 'pass');
+                } else {
+                    addResult('✗ Incorrect guess validation failed', 'fail');
+                }
+
+                // Test 2: Scoring system
+                const initialScore = gameState.gameStats.score;
+                gameState.currentClueLevel = 'hard';
+                const pointsAwarded = gameController.awardPointsForCorrectGuess();
+                
+                if (pointsAwarded === 3 && gameState.gameStats.score === initialScore + 3) {
+                    addResult('✓ Hard clue scoring (3 points) works', 'pass');
+                } else {
+                    addResult(`✗ Hard clue scoring failed. Expected 3, got ${pointsAwarded}`, 'fail');
+                }
+
+                gameState.currentClueLevel = 'medium';
+                const mediumPoints = gameController.awardPointsForCorrectGuess();
+                if (mediumPoints === 2) {
+                    addResult('✓ Medium clue scoring (2 points) works', 'pass');
+                } else {
+                    addResult(`✗ Medium clue scoring failed. Expected 2, got ${mediumPoints}`, 'fail');
+                }
+
+                gameState.currentClueLevel = 'easy';
+                const easyPoints = gameController.awardPointsForCorrectGuess();
+                if (easyPoints === 1) {
+                    addResult('✓ Easy clue scoring (1 point) works', 'pass');
+                } else {
+                    addResult(`✗ Easy clue scoring failed. Expected 1, got ${easyPoints}`, 'fail');
+                }
+
+                // Test 3: Attempt tracking
+                const initialAttempts = gameState.gameStats.attemptsRemaining;
+                addResult(`Initial attempts: ${initialAttempts}`, 'info');
+
+                // Simulate incorrect guess
+                gameController.handleIncorrectGuess('invalid_city', { 
+                    isCorrect: false, 
+                    expectedCity: nextCity, 
+                    guessedCity: 'invalid_city' 
+                });
+
+                if (gameState.gameStats.attemptsRemaining === initialAttempts - 1) {
+                    addResult('✓ Attempt deduction for incorrect guess works', 'pass');
+                } else {
+                    addResult(`✗ Attempt deduction failed. Expected ${initialAttempts - 1}, got ${gameState.gameStats.attemptsRemaining}`, 'fail');
+                }
+
+                addResult(`Final score: ${gameState.gameStats.score}`, 'info');
+                addResult(`Remaining attempts: ${gameState.gameStats.attemptsRemaining}`, 'info');
+                addResult('All tests completed!', 'pass');
+
+            } catch (error) {
+                addResult(`Test error: ${error.message}`, 'fail');
+                console.error('Test error:', error);
+            }
+        }
+
+        // Run tests when page loads
+        runTests();
+    </script>
+</body>
+</html>

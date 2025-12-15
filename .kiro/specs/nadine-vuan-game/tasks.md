@@ -9,14 +9,14 @@
 
 - [x] 2. Implement core game state management system
   - [x] 2.1 Create GameState class with initialization and reset methods
-    - Define GameState object structure with all required properties
-    - Implement initializeGame() method with randomized starting conditions
+    - Define GameState object structure with 5-city route, scoring, and attempt tracking
+    - Implement initializeGame() method with random starting city and predetermined route generation
     - Create resetGameState() method for restart functionality
-    - _Requirements: 1.2, 1.4, 6.3_
+    - _Requirements: 1.3, 1.4, 6.3_
 
-  - [ ]* 2.2 Write property test for game initialization consistency
-    - **Property 1: Game initialization consistency**
-    - **Validates: Requirements 1.2, 1.4, 6.3**
+  - [ ]* 2.2 Write property test for journey initialization consistency
+    - **Property 1: Journey initialization consistency**
+    - **Validates: Requirements 1.3, 1.4**
 
   - [x] 2.3 Implement browser storage persistence for game state
     - Create saveGameState() and loadGameState() methods
@@ -72,35 +72,43 @@
     - _Requirements: 7.4, 4.3_
 
 - [x] 5. Implement clue system and investigation mechanics
-  - [x] 5.1 Create clue generation and storage system
-    - Implement generateClues() function with randomization
-    - Create addClueToCollection() method for clue storage
-    - Build displayClues() function for organized presentation
+  - [x] 5.1 Create clue progression and storage system
+    - Implement clue progression logic (hard → medium → easy) for next destination
+    - Create addClueToCollection() method with difficulty and point value tracking
+    - Build evidence interface for viewing collected clues
     - Add clue validation and consistency checks
-    - _Requirements: 2.2, 2.4, 2.5_
+    - _Requirements: 2.2, 2.4, 2.6_
 
-  - [ ]* 5.2 Write property test for clue system integrity
-    - **Property 3: Clue system integrity**
-    - **Validates: Requirements 2.2, 2.4, 2.5**
+  - [ ]* 5.2 Write property test for clue progression integrity
+    - **Property 2: Clue progression integrity**
+    - **Validates: Requirements 2.2, 2.4**
 
-  - [x] 5.3 Implement informant interaction system
+  - [ ]* 5.3 Write property test for evidence collection consistency
+    - **Property 7: Evidence collection consistency**
+    - **Validates: Requirements 2.4, 2.6**
+
+  - [x] 5.4 Implement informant interaction system
     - Create showInformantDialogue() function
     - Implement "not here" response handling for incorrect cities
     - Add clue presentation logic with difficulty selection
     - Create investigation completion detection
     - _Requirements: 2.1, 2.3_
 
-- [x] 6. Build travel system and world map interface
-  - [x] 6.1 Create world map navigation system
-    - Implement showWorldMap() function with interactive city selection
-    - Add city highlighting and selection feedback
-    - Create travel validation to prevent revisiting cities
-    - Build route tracking and display functionality
-    - _Requirements: 3.1, 3.2, 3.3_
+- [-] 6. Build travel system and scoring mechanics
+  - [x] 6.1 Create guess validation and scoring system
+    - Implement guess validation against the predetermined route
+    - Add scoring system (3 points for hard, 2 for medium, 1 for easy)
+    - Create attempt tracking and deduction logic
+    - Build "not here" scene display for incorrect guesses
+    - _Requirements: 3.2, 3.3, 4.2_
 
-  - [ ]* 6.2 Write property test for route management integrity
-    - **Property 4: Route management integrity**
-    - **Validates: Requirements 3.2, 3.3, 3.4**
+  - [ ]* 6.2 Write property test for scoring system consistency
+    - **Property 3: Scoring system consistency**
+    - **Validates: Requirements 3.2**
+
+  - [ ]* 6.3 Write property test for attempt tracking reliability
+    - **Property 4: Attempt tracking reliability**
+    - **Validates: Requirements 3.3, 4.2**
 
   - [x] 6.3 Implement travel animations and transitions
     - Create animateTravel() function for city-to-city movement
@@ -113,28 +121,21 @@
     - **Property 5: Game phase transitions**
     - **Validates: Requirements 3.5, 4.5**
 
-- [x] 7. Create progress tracking and feedback systems
-  - [x] 7.1 Implement game statistics and progress display
-    - Create updateProgressDisplay() function
-    - Add cities visited and clues collected counters
-    - Implement time tracking and attempt monitoring
-    - Create milestone detection and celebration
-    - _Requirements: 4.3, 4.5_
+- [-] 7. Create game over and journey completion systems
+  - [x] 7.1 Implement game over condition handling
+    - Create game over detection when attempts reach zero
+    - Add final score display and game over messaging
+    - Implement journey completion detection after 4 cities
+    - Create Buenos Aires presentation as final destination
+    - _Requirements: 4.5, 5.1, 6.1_
 
-  - [ ]* 7.2 Write property test for progress tracking consistency
-    - **Property 6: Progress tracking consistency**
-    - **Validates: Requirements 4.3, 4.5**
+  - [ ]* 7.2 Write property test for game over condition accuracy
+    - **Property 5: Game over condition accuracy**
+    - **Validates: Requirements 4.5, 6.1**
 
-  - [x] 7.3 Build feedback system for player actions
-    - Implement positive feedback for correct deductions
-    - Create helpful feedback for incorrect choices
-    - Add warning system for approaching game limits
-    - Design encouraging messages and hints
-    - _Requirements: 4.1, 4.2, 4.4_
-
-  - [ ]* 7.4 Write property test for feedback system reliability
-    - **Property 7: Feedback system reliability**
-    - **Validates: Requirements 4.1, 4.2**
+  - [ ]* 7.3 Write property test for journey completion detection
+    - **Property 6: Journey completion detection**
+    - **Validates: Requirements 5.1**
 
 - [x] 8. Implement final encounter and victory conditions
   - [x] 8.1 Create Buenos Aires final encounter sequence
@@ -172,15 +173,15 @@
 
 - [x] 10. Implement randomization and fairness systems
   - [x] 10.1 Create fair randomization for game elements
-    - Implement random starting city selection
-    - Add fair clue randomization across difficulty tiers
+    - Implement random starting city selection from 10 non-Buenos Aires cities
+    - Add 5-city route generation with Buenos Aires as final destination
     - Create balanced random selection algorithms
     - Add randomization testing and validation
-    - _Requirements: 1.3, 2.2, 8.2_
+    - _Requirements: 1.3, 1.4, 8.2_
 
-  - [ ]* 10.2 Write property test for randomization fairness
-    - **Property 10: Randomization fairness**
-    - **Validates: Requirements 8.2**
+  - [ ]* 10.2 Write property test for starting city randomization fairness
+    - **Property 10: Starting city randomization fairness**
+    - **Validates: Requirements 1.3, 8.2**
 
 - [-] 11. Add comprehensive error handling and input validation
   - [x] 11.1 Implement robust input validation system

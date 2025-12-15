@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over Validation Test</title>
+    <style>
+        body { font-family: monospace; background: #1a1a2e; color: #00ff41; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #00ff41; border-radius: 5px; }
+        .pass { color: #00ff41; }
+        .fail { color: #ff4444; }
+        .info { color: #ffbf00; }
+        button { background: #0f3460; color: #00ff41; border: 1px solid #00ff41; padding: 10px 20px; margin: 5px; cursor: pointer; }
+        button:hover { background: #00ff41; color: #0f3460; }
+    </style>
+</head>
+<body>
+    <h1>🕵️ Game Over & Journey Completion Validation</h1>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Manual Tests</h2>
+        <button onclick="testGameOverDetection()">Test Game Over Detection</button>
+        <button onclick="testJourneyCompletion()">Test Journey Completion</button>
+        <button onclick="testFinalDestination()">Test Final Destination</button>
+        <button onclick="testGameOverDisplay()">Test Game Over Display</button>
+    </div>
+
+    <script type="module">
+        // Import the game modules for testing
+        import { GameController } from './src/modules/GameController.js';
+        import { GameState } from './src/modules/GameState.js';
+        import { FailureHandler } from './src/modules/FailureHandler.js';
+
+        let gameController;
+        let testResults = [];
+
+        // Initialize test environment
+        async function initializeTests() {
+            try {
+                gameController = new GameController();
+                await gameController.init();
+                logResult('✅ Game Controller initialized successfully', 'pass');
+            } catch (error) {
+                logResult(`❌ Failed to initialize Game Controller: ${error.message}`, 'fail');
+            }
+        }
+
+        // Test game over detection when attempts reach zero
+        window.testGameOverDetection = function() {
+            try {
+                // Set up game state with zero attempts
+                gameController.gameState.gameStats.attemptsRemaining = 0;
+                gameController.gameState.gameStats.citiesCompleted = 2;
+                gameController.gameState.collectedClues = [
+                    { difficulty: 'hard', text: 'Test clue', sourceCity: 'tokyo' }
+                ];
+
+                // Check failure conditions
+                const failureResult = gameController.failureHandler.checkFailureConditions();
+                
+                if (failureResult.hasFailed && failureResult.failureType === 'attempts_exhausted') {
+                    logResult('✅ Game over detection works correctly', 'pass');
+                    logResult(`   Failure type: ${failureResult.failureType}`, 'info');
+                    logResult(`   Message: ${failureResult.message}`, 'info');
+                } else {
+                    logResult('❌ Game over detection failed', 'fail');
+                }
+            } catch (error) {
+                logResult(`❌ Game over detection test error: ${error.message}`, 'fail');
+            }
+        };
+
+        // Test journey completion detection after 4 cities
+        window.testJourneyCompletion = function() {
+            try {
+                // Set up game state with 4 completed cities
+                gameController.gameState.gameStats.citiesCompleted = 4;
+                gameController.gameState.cityRoute = ['tokyo', 'london', 'roma', 'sydney', 'buenosAires'];
+                gameController.gameState.currentCityIndex = 3; // At 4th city (0-indexed)
+
+                // Test journey completion check
+                const journeyStatus = gameController.checkJourneyCompletion();
+                
+                if (journeyStatus.shouldPresentFinalDestination) {
+                    logResult('✅ Journey completion detection works correctly', 'pass');
+                    logResult(`   Message: ${journeyStatus.message}`, 'info');
+                    logResult(`   Progress: ${journeyStatus.progress}`, 'info');
+                } else {
+                    logResult('❌ Journey completion detection failed', 'fail');
+                }
+            } catch (error) {
+                logResult(`❌ Journey completion test error: ${error.message}`, 'fail');
+            }
+        };
+
+        // Test final destination presentation
+        window.testFinalDestination = function() {
+            try {
+                // Set up game state at Buenos Aires
+                gameController.gameState.currentCity = 'buenosAires';
+                gameController.gameState.gameStats.citiesCompleted = 5;
+                
+                // Mock city data for Buenos Aires
+                const mockBuenosAires = { id: 'buenosAires', name: 'Buenos Aires', country: 'Argentina', is_final: true };
+                
+                // Test final destination check
+                const journeyStatus = gameController.checkJourneyCompletion();
+                
+                if (journeyStatus.isJourneyComplete) {
+                    logResult('✅ Final destination detection works correctly', 'pass');
+                    logResult(`   Message: ${journeyStatus.message}`, 'info');
+                } else {
+                    logResult('❌ Final destination detection failed', 'fail');
+                }
+            } catch (error) {
+                logResult(`❌ Final destination test error: ${error.message}`, 'fail');
+            }
+        };
+
+        // Test game over display functionality
+        window.testGameOverDisplay = function() {
+            try {
+                // Create mock failure result
+                const mockFailureResult = {
+                    hasFailed: true,
+                    failureType: 'attempts_exhausted',
+                    details: {
+                        finalScore: 8,
+                        citiesCompleted: 3,
+                        routeProgress: '3/5',
+                        cluesCollected: 5,
+                        elapsedTime: { formatted: '12:34' },
+                        investigationEfficiency: 75,
+                        investigationSummary: {
+                            investigationPath: 'Tokyo → London → Rome',
+                            nextDestination: 'Sydney'
+                        }
+                    }
+                };
+
+                // Test game over message generation
+                const gameOverMessage = gameController.failureHandler.getGameOverMessage(
+                    mockFailureResult.failureType, 
+                    mockFailureResult.details
+                );
+
+                if (gameOverMessage && gameOverMessage.title && gameOverMessage.primary) {
+                    logResult('✅ Game over message generation works correctly', 'pass');
+                    logResult(`   Title: ${gameOverMessage.title}`, 'info');
+                    logResult(`   Primary: ${gameOverMessage.primary}`, 'info');
+                } else {
+                    logResult('❌ Game over message generation failed', 'fail');
+                }
+            } catch (error) {
+                logResult(`❌ Game over display test error: ${error.message}`, 'fail');
+            }
+        };
+
+        function logResult(message, type) {
+            testResults.push({ message, type, timestamp: new Date().toLocaleTimeString() });
+            updateResultsDisplay();
+        }
+
+        function updateResultsDisplay() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = testResults.map(result => 
+                `<div class="${result.type}">[${result.timestamp}] ${result.message}</div>`
+            ).join('');
+        }
+
+        // Auto-run basic tests on load
+        window.addEventListener('load', async () => {
+            await initializeTests();
+            
+            // Run automatic validation tests
+            setTimeout(() => {
+                logResult('🔍 Running automatic validation tests...', 'info');
+                
+                // Test 1: Verify GameState has required methods
+                if (typeof gameController.gameState.checkFailureConditions === 'function') {
+                    logResult('✅ GameState has checkFailureConditions method', 'pass');
+                } else {
+                    logResult('❌ GameState missing checkFailureConditions method', 'fail');
+                }
+
+                // Test 2: Verify FailureHandler exists
+                if (gameController.failureHandler) {
+                    logResult('✅ FailureHandler is initialized', 'pass');
+                } else {
+                    logResult('❌ FailureHandler not initialized', 'fail');
+                }
+
+                // Test 3: Verify journey completion method exists
+                if (typeof gameController.checkJourneyCompletion === 'function') {
+                    logResult('✅ checkJourneyCompletion method exists', 'pass');
+                } else {
+                    logResult('❌ checkJourneyCompletion method missing', 'fail');
+                }
+
+                // Test 4: Verify game over trigger method exists
+                if (typeof gameController.triggerGameOver === 'function') {
+                    logResult('✅ triggerGameOver method exists', 'pass');
+                } else {
+                    logResult('❌ triggerGameOver method missing', 'fail');
+                }
+
+                logResult('🎯 Automatic validation complete. Run manual tests above.', 'info');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

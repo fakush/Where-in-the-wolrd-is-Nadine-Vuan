@@ -39,6 +39,12 @@
                     <i class="fas fa-map-marker-alt"></i> City Name
                 </h2>
                 <div class="game-stats">
+                    <span id="score-count">
+                        <i class="fas fa-star"></i> Score: 0
+                    </span>
+                    <span id="attempts-remaining-count">
+                        <i class="fas fa-heart"></i> Attempts: 3
+                    </span>
                     <span id="cities-visited-count">
                         <i class="fas fa-globe-americas"></i> Cities: 0
                     </span>
@@ -163,9 +169,14 @@
 
     </div>
 
-    <!-- Include JavaScript -->
+    <!-- Include JavaScript (ES6 Modules) -->
     <script type="module" src="game_modular.js"></script>
-    <!-- Fallback for non-module browsers -->
-    <script nomodule src="game.js"></script>
+    <!-- Fallback message for very old browsers -->
+    <noscript>
+        <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+            <h2>🚫 JavaScript Required</h2>
+            <p>This game requires JavaScript to run. Please enable JavaScript in your browser.</p>
+        </div>
+    </noscript>
 </body>
 </html>

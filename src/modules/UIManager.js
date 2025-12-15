@@ -49,6 +49,8 @@ export class UIManager {
             restartGameBtn: document.getElementById('restart-game-btn'),
             restartFromFailureBtn: document.getElementById('restart-from-failure-btn'),
             currentCityName: document.getElementById('current-city-name'),
+            scoreCount: document.getElementById('score-count'),
+            attemptsRemainingCount: document.getElementById('attempts-remaining-count'),
             citiesVisitedCount: document.getElementById('cities-visited-count'),
             cluesCollectedCount: document.getElementById('clues-collected-count'),
             cityScene: document.getElementById('city-scene'),
@@ -325,12 +327,77 @@ export class UIManager {
             const cityButton = document.createElement('button');
             cityButton.textContent = `${city.name}, ${city.country}`;
             cityButton.className = 'city-marker-button';
+
+            // Highlight final destination if this is Buenos Aires
+            if (city.is_final) {
+                cityButton.classList.add('final-destination-marker');
+                cityButton.innerHTML = `
+                    <i class="fas fa-star"></i> ${city.name}, ${city.country}
+                    <span class="final-destination-label">Final Destination</span>
+                `;
+            }
+
             cityButton.addEventListener('click', () => {
                 this.gameController.processPlayerAction('select-destination', { cityId: city.id });
             });
             
             this.elements.cityMarkers.appendChild(cityButton);
         });
+    }
+
+    // Show world map with Buenos Aires highlighted as final destination
+    showWorldMapWithFinalDestination() {
+        if (!this.elements.cityMarkers) return;
+
+        // Clear existing markers
+        this.elements.cityMarkers.innerHTML = '';
+
+        // Get Buenos Aires (should be the only available city at this point)
+        const availableCities = this.gameController.getCitiesByCriteria({
+            excludeVisited: true,
+            excludeCurrent: true
+        });
+
+        // Find Buenos Aires specifically
+        const buenosAires = availableCities.find(city => city.is_final);
+
+        if (!buenosAires) {
+            this.elements.cityMarkers.innerHTML = '<p class="error-message">🚫 Final destination not available.</p>';
+            return;
+        }
+
+        // Create special final destination display
+        const finalDestinationContainer = document.createElement('div');
+        finalDestinationContainer.className = 'final-destination-container';
+        finalDestinationContainer.innerHTML = `
+            <div class="final-destination-header">
+                <h3><i class="fas fa-flag-checkered"></i> Final Destination</h3>
+                <p class="journey-progress">4 of 5 cities completed</p>
+            </div>
+            <button class="final-destination-button" id="final-destination-btn">
+                <div class="destination-icon">🏆</div>
+                <div class="destination-info">
+                    <h4>${buenosAires.name}, ${buenosAires.country}</h4>
+                    <p class="destination-subtitle">Where Nadine Vuan awaits...</p>
+                </div>
+                <div class="destination-action">
+                    <i class="fas fa-arrow-right"></i> Complete Journey
+                </div>
+            </button>
+        `;
+
+        // Add click handler for final destination
+        const finalDestinationBtn = finalDestinationContainer.querySelector('#final-destination-btn');
+        finalDestinationBtn.addEventListener('click', () => {
+            this.gameController.processPlayerAction('select-destination', { cityId: buenosAires.id });
+        });
+
+        this.elements.cityMarkers.appendChild(finalDestinationContainer);
+
+        // Add special styling and animation
+        setTimeout(() => {
+            finalDestinationContainer.classList.add('final-destination-reveal');
+        }, 100);
     }
 
     // Update clues screen
@@ -361,16 +428,27 @@ export class UIManager {
 
     // Update progress display
     updateProgressDisplay(stats) {
+        if (this.elements.scoreCount) {
+            this.elements.scoreCount.innerHTML = `<i class="fas fa-star"></i> Score: ${stats.score || 0}`;
+        }
+
+        if (this.elements.attemptsRemainingCount) {
+            const attempts = stats.attemptsRemaining || 0;
+            const icon = attempts <= 1 ? 'fas fa-heart-broken' : 'fas fa-heart';
+            const color = attempts <= 1 ? 'color: #ff4444;' : '';
+            this.elements.attemptsRemainingCount.innerHTML = `<i class="${icon}" style="${color}"></i> Attempts: ${attempts}`;
+        }
+
         if (this.elements.citiesVisitedCount) {
-            this.elements.citiesVisitedCount.textContent = stats.citiesVisited || 0;
+            this.elements.citiesVisitedCount.innerHTML = `<i class="fas fa-globe-americas"></i> Cities: ${stats.citiesVisited || 0}`;
         }
         
         if (this.elements.cluesCollectedCount) {
-            this.elements.cluesCollectedCount.textContent = stats.cluesCollected || 0;
+            this.elements.cluesCollectedCount.innerHTML = `<i class="fas fa-puzzle-piece"></i> Clues: ${stats.cluesCollected || 0}`;
         }
     }
 
-    // Show game over screen
+    // Show game over screen with enhanced information
     showGameOverScreen(failureResult) {
         const gameOverMessage = this.gameController.getGameOverMessage(
             failureResult.failureType, 
@@ -387,22 +465,60 @@ export class UIManager {
         }
         
         if (messageElement) {
+            const details = failureResult.details;
+            const investigationSummary = details.investigationSummary || {};
+
             messageElement.innerHTML = `
                 <span class="evidence-marker">Case Status</span>
                 <p class="retro-text primary-message">${gameOverMessage.primary}</p>
                 <p class="retro-text secondary-message">${gameOverMessage.secondary}</p>
+
+                <div class="investigation-summary">
+                    <h4><i class="fas fa-clipboard-list"></i> Investigation Summary</h4>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">Final Score:</span>
+                            <span class="summary-value">${details.finalScore || 0} points</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Route Progress:</span>
+                            <span class="summary-value">${details.routeProgress || '0/5'}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Cities Completed:</span>
+                            <span class="summary-value">${details.citiesCompleted || 0}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Clues Collected:</span>
+                            <span class="summary-value">${details.cluesCollected || 0}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Investigation Time:</span>
+                            <span class="summary-value">${details.elapsedTime?.formatted || '0:00'}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Efficiency:</span>
+                            <span class="summary-value">${details.investigationEfficiency || 0}%</span>
+                        </div>
+                    </div>
+                    
+                    ${investigationSummary.investigationPath ? `
+                        <div class="investigation-path">
+                            <h5><i class="fas fa-route"></i> Investigation Path</h5>
+                            <p class="path-text">${investigationSummary.investigationPath}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${investigationSummary.nextDestination ? `
+                        <div class="next-destination">
+                            <h5><i class="fas fa-compass"></i> Next Destination</h5>
+                            <p class="next-text">You were heading to: ${investigationSummary.nextDestination}</p>
+                        </div>
+                    ` : ''}
+                </div>
+                
                 <div class="encouragement-box">
                     <p class="encouragement-text">${gameOverMessage.encouragement}</p>
-                </div>
-                <div class="failure-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Cities Visited:</span>
-                        <span class="stat-value">${failureResult.details.citiesVisited || 0}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Clues Collected:</span>
-                        <span class="stat-value">${failureResult.details.cluesCollected || 0}</span>
-                    </div>
                 </div>
             `;
         }
@@ -415,6 +531,16 @@ export class UIManager {
         
         // Show the game over screen
         this.showScreen('game-over-screen');
+
+        // Add fade-in animation for summary elements
+        setTimeout(() => {
+            const summaryElements = messageElement.querySelectorAll('.summary-item, .investigation-path, .next-destination');
+            summaryElements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.classList.add('summary-reveal');
+                }, index * 100);
+            });
+        }, 500);
     }
 
     // Update final encounter screen
@@ -490,6 +616,61 @@ export class UIManager {
         if (this.elements.collectCluesBtn) {
             this.elements.collectCluesBtn.disabled = true;
             this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-times"></i> No Clues Here';
+        }
+    }
+
+    // Show "not here" scene for incorrect guesses
+    async showNotHereScene(cityData, imagePath) {
+        // Switch to investigation screen to show the scene
+        this.showScreen('investigation-screen');
+
+        // Update city name
+        if (this.elements.currentCityName) {
+            this.elements.currentCityName.textContent = `${cityData.name}, ${cityData.country}`;
+        }
+
+        // Load and display the "not here" scene image
+        if (this.elements.cityScene && this.assetLoader) {
+            try {
+                this.elements.cityScene.style.opacity = '0.5';
+
+                const image = await this.assetLoader.loadImage(imagePath, 'scene', {
+                    timeout: 5000,
+                    showLoadingState: false,
+                    retryOnFailure: true,
+                    fallbackOnError: true
+                });
+
+                this.elements.cityScene.src = image.src;
+                this.elements.cityScene.alt = `${cityData.name} - Not Here Scene`;
+                this.elements.cityScene.style.opacity = '1';
+
+            } catch (error) {
+                console.warn(`Failed to load not here scene: ${imagePath}`);
+                // Use fallback placeholder
+                this.elements.cityScene.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNDQ0Ii8+PHRleHQgeD0iNTAlIiB5PSI0NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vdCBIZXJlPC90ZXh0Pjx0ZXh0IHg9IjUwJSIgeT0iNTUlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNjY2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5OYWRpbmUgd2FzIG5vdCBpbiB0aGlzIGNpdHk8L3RleHQ+PC9zdmc+';
+                this.elements.cityScene.style.opacity = '1';
+            }
+        } else if (this.elements.cityScene) {
+            // Fallback to original method
+            this.elements.cityScene.src = imagePath;
+            this.elements.cityScene.alt = `${cityData.name} - Not Here Scene`;
+            this.elements.cityScene.onerror = () => {
+                console.warn(`Failed to load not here scene: ${imagePath}`);
+                this.elements.cityScene.src = '../assets/scenes/world_map.png';
+            };
+        }
+
+        // Disable collect clues button
+        if (this.elements.collectCluesBtn) {
+            this.elements.collectCluesBtn.disabled = true;
+            this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-times"></i> Nadine Not Here';
+        }
+
+        // Disable travel button temporarily
+        if (this.elements.travelBtn) {
+            this.elements.travelBtn.disabled = true;
+            this.elements.travelBtn.innerHTML = '<i class="fas fa-hourglass-half"></i> Processing...';
         }
     }
 
@@ -608,5 +789,104 @@ export class UIManager {
     showError(message) {
         console.error(message);
         this.showFeedbackMessage(message, 'error');
+    }
+
+    // Display informant dialogue with enhanced formatting
+    displayInformantDialogue(dialogueText, informantName, dialogueType) {
+        const dialogueElement = this.elements.dialogueText;
+
+        if (!dialogueElement) {
+            console.warn('Dialogue element not found in UI');
+            return;
+        }
+
+        // Safety checks for parameters
+        if (!dialogueText || typeof dialogueText !== 'string') {
+            console.warn('displayInformantDialogue called with invalid dialogueText:', dialogueText);
+            dialogueText = 'No dialogue available.';
+        }
+
+        if (!informantName || typeof informantName !== 'string') {
+            console.warn('displayInformantDialogue called with invalid informantName:', informantName);
+            informantName = 'Unknown Informant';
+        }
+
+        if (!dialogueType || typeof dialogueType !== 'string') {
+            console.warn('displayInformantDialogue called with invalid dialogueType:', dialogueType);
+            dialogueType = 'greeting';
+        }
+
+        // Clear previous dialogue
+        dialogueElement.innerHTML = '';
+
+        // Create formatted dialogue content
+        const dialogueContent = document.createElement('div');
+        dialogueContent.className = `dialogue-content dialogue-${dialogueType}`;
+
+        // Add informant name header
+        const nameHeader = document.createElement('div');
+        nameHeader.className = 'informant-name';
+        nameHeader.innerHTML = `<i class="fas fa-user-tie"></i> ${informantName}`;
+        dialogueContent.appendChild(nameHeader);
+
+        // Add dialogue text with typing effect
+        const textElement = document.createElement('p');
+        textElement.className = 'dialogue-text';
+        dialogueContent.appendChild(textElement);
+
+        // Add to dialogue element
+        dialogueElement.appendChild(dialogueContent);
+
+        // Animate dialogue appearance
+        dialogueContent.classList.add('dialogue-fade-in');
+
+        // Type out the dialogue text
+        this.typeDialogue(textElement, dialogueText, 50);
+
+        // Add dialogue type indicator
+        setTimeout(() => {
+            const typeIndicator = document.createElement('span');
+            typeIndicator.className = `dialogue-type-indicator type-${dialogueType}`;
+            typeIndicator.textContent = this.getDialogueTypeLabel(dialogueType);
+            dialogueContent.appendChild(typeIndicator);
+        }, (dialogueText.length * 50) + 500);
+    }
+
+    // Type out dialogue text with animation
+    typeDialogue(element, text, speed = 50) {
+        // Safety check for undefined text
+        if (!text || typeof text !== 'string') {
+            console.warn('typeDialogue called with invalid text:', text);
+            element.textContent = 'No dialogue available.';
+            element.classList.add('dialogue-complete');
+            return;
+        }
+
+        let index = 0;
+        element.textContent = '';
+
+        const typeInterval = setInterval(() => {
+            if (index < text.length) {
+                element.textContent += text.charAt(index);
+                index++;
+            } else {
+                clearInterval(typeInterval);
+                // Add completion animation
+                element.classList.add('dialogue-complete');
+            }
+        }, speed);
+    }
+
+    // Get dialogue type label for UI display
+    getDialogueTypeLabel(dialogueType) {
+        const labels = {
+            'greeting': '👋 Greeting',
+            'clue_presentation': '🔍 Clue Information',
+            'farewell_helpful': '✅ Helpful Farewell',
+            'farewell_unhelpful': '❌ Unhelpful Farewell',
+            'not_here': '🚫 Not Here'
+        };
+
+        return labels[dialogueType] || '💬 Dialogue';
     }
 }

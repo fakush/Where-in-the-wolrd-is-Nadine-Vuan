@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fair Randomization Integration Test</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #001100;
+            border: 2px solid #0f0;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid;
+        }
+        .pass { border-color: #0f0; background: #001100; }
+        .fail { border-color: #f00; background: #110000; color: #f00; }
+        .info { border-color: #ff0; background: #111100; color: #ff0; }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Fair Randomization Integration Test</h1>
+        <p>Testing the integration of fair randomization with the actual game system</p>
+
+        <div class="test-section">
+            <h2>Test Controls</h2>
+            <button onclick="runIntegrationTest()">Run Integration Test</button>
+            <button onclick="testGameInitialization()">Test Game Initialization</button>
+            <button onclick="testMultipleGames()">Test Multiple Game Sessions</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="test-results"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { GameController } from './src/modules/GameController.js';
+
+        let gameController;
+        let testResults = [];
+
+        // Add test result to display
+        function addResult(message, type = 'info') {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            document.getElementById('test-results').appendChild(resultDiv);
+            
+            testResults.push({ message, type, timestamp: new Date() });
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Initialize game controller
+        async function initializeGame() {
+            try {
+                gameController = new GameController();
+                await gameController.init();
+                addResult('Game controller initialized successfully', 'pass');
+                return true;
+            } catch (error) {
+                addResult(`Failed to initialize game controller: ${error.message}`, 'fail');
+                return false;
+            }
+        }
+
+        // Run comprehensive integration test
+        window.runIntegrationTest = async function() {
+            clearResults();
+            addResult('Starting fair randomization integration test...', 'info');
+            
+            const initialized = await initializeGame();
+            if (!initialized) {
+                addResult('Cannot proceed with integration test - initialization failed', 'fail');
+                return;
+            }
+
+            // Test 1: Validate RandomizationSystem integration
+            addResult('Testing RandomizationSystem integration...', 'info');
+            
+            if (gameController.randomizationSystem) {
+                addResult('RandomizationSystem is properly integrated', 'pass');
+                
+                // Test system validation
+                const validation = gameController.validateRandomizationSystem();
+                addResult(`System validation: ${validation.overallValid ? 'VALID' : 'INVALID'}`, 
+                    validation.overallValid ? 'pass' : 'fail');
+                
+                if (validation.overallValid) {
+                    addResult('All randomization subsystems are working correctly', 'pass');
+                } else {
+                    addResult('Some randomization subsystems have issues', 'fail');
+                }
+            } else {
+                addResult('RandomizationSystem not found in GameController', 'fail');
+                return;
+            }
+
+            // Test 2: Test fair game initialization
+            addResult('Testing fair game initialization...', 'info');
+            
+            try {
+                // Initialize randomization system
+                gameController.randomizationSystem.initialize();
+                
+                // Test game state initialization with fair randomization
+                gameController.gameState.initializeGame(
+                    gameController.gameState.gameData, 
+                    gameController.randomizationSystem
+                );
+                
+                if (gameController.gameState.cityRoute && gameController.gameState.cityRoute.length === 5) {
+                    addResult(`Fair route generated: ${gameController.gameState.cityRoute.join(' → ')}`, 'pass');
+                    
+                    // Validate route
+                    const routeValidation = gameController.gameState.validateGeneratedRoute(
+                        gameController.gameState.cityRoute, 
+                        gameController.gameState.gameData
+                    );
+                    
+                    if (routeValidation.isValid) {
+                        addResult('Generated route passes validation', 'pass');
+                        addResult(`Route stats: ${routeValidation.routeStats.countries} countries, final: ${routeValidation.routeStats.finalDestination}`, 'info');
+                    } else {
+                        addResult(`Route validation failed: ${routeValidation.errors.join(', ')}`, 'fail');
+                    }
+                } else {
+                    addResult('Failed to generate valid route', 'fail');
+                }
+                
+                if (gameController.gameState.currentCity) {
+                    addResult(`Fair starting city selected: ${gameController.gameState.currentCity}`, 'pass');
+                } else {
+                    addResult('Failed to select starting city', 'fail');
+                }
+                
+            } catch (error) {
+                addResult(`Game initialization error: ${error.message}`, 'fail');
+            }
+
+            // Test 3: Test randomization quality
+            addResult('Testing randomization quality...', 'info');
+            
+            try {
+                const qualityTest = gameController.addRandomizationTestingAndValidation();
+                
+                addResult(`Starting city fairness: ${(qualityTest.startingCityFairness.fairnessScore * 100).toFixed(1)}%`, 
+                    qualityTest.startingCityFairness.isBalanced ? 'pass' : 'fail');
+                
+                addResult(`Route generation fairness: ${(qualityTest.routeGenerationFairness.fairnessScore * 100).toFixed(1)}%`, 
+                    qualityTest.routeGenerationFairness.isBalanced ? 'pass' : 'fail');
+                
+                addResult(`Overall quality: ${qualityTest.overallQuality.quality.toUpperCase()} (${(qualityTest.overallQuality.overallScore * 100).toFixed(1)}%)`, 
+                    qualityTest.overallQuality.overallScore >= 0.7 ? 'pass' : 'fail');
+                
+                if (qualityTest.overallQuality.recommendations.length > 0) {
+                    addResult('Recommendations:', 'info');
+                    qualityTest.overallQuality.recommendations.forEach(rec => {
+                        addResult(`  - ${rec}`, 'info');
+                    });
+                }
+                
+            } catch (error) {
+                addResult(`Quality test error: ${error.message}`, 'fail');
+            }
+
+            addResult('Integration test completed!', 'info');
+        };
+
+        // Test game initialization multiple times
+        window.testGameInitialization = async function() {
+            clearResults();
+            addResult('Testing game initialization with fair randomization...', 'info');
+            
+            const initialized = await initializeGame();
+            if (!initialized) return;
+
+            const iterations = 10;
+            const routes = [];
+            const startingCities = [];
+            
+            for (let i = 0; i < iterations; i++) {
+                try {
+                    gameController.randomizationSystem.initialize();
+                    gameController.gameState.initializeGame(
+                        gameController.gameState.gameData, 
+                        gameController.randomizationSystem
+                    );
+                    
+                    if (gameController.gameState.cityRoute && gameController.gameState.cityRoute.length === 5) {
+                        routes.push([...gameController.gameState.cityRoute]);
+                        startingCities.push(gameController.gameState.currentCity);
+                        addResult(`Game ${i + 1}: ${gameController.gameState.currentCity} → ... → ${gameController.gameState.cityRoute[4]}`, 'pass');
+                    } else {
+                        addResult(`Game ${i + 1}: Failed to generate route`, 'fail');
+                    }
+                } catch (error) {
+                    addResult(`Game ${i + 1}: Error - ${error.message}`, 'fail');
+                }
+            }
+            
+            // Analyze variety
+            const uniqueRoutes = new Set(routes.map(route => route.join('-')));
+            const uniqueStartingCities = new Set(startingCities);
+            
+            addResult(`Generated ${routes.length} valid routes out of ${iterations} attempts`, 
+                routes.length === iterations ? 'pass' : 'fail');
+            addResult(`Route variety: ${uniqueRoutes.size} unique routes`, 
+                uniqueRoutes.size >= Math.min(5, routes.length) ? 'pass' : 'info');
+            addResult(`Starting city variety: ${uniqueStartingCities.size} unique starting cities`, 
+                uniqueStartingCities.size >= Math.min(3, routes.length) ? 'pass' : 'info');
+        };
+
+        // Test multiple game sessions for independence
+        window.testMultipleGames = async function() {
+            clearResults();
+            addResult('Testing multiple game sessions for independence...', 'info');
+            
+            const initialized = await initializeGame();
+            if (!initialized) return;
+
+            const sessions = [];
+            const sessionCount = 5;
+            
+            for (let i = 0; i < sessionCount; i++) {
+                try {
+                    // Start new game session
+                    gameController.startGame();
+                    
+                    const sessionData = {
+                        sessionId: gameController.gameState.sessionId,
+                        route: [...gameController.gameState.cityRoute],
+                        startingCity: gameController.gameState.currentCity,
+                        randomizationStats: gameController.randomizationSystem.getRandomizationStats()
+                    };
+                    
+                    sessions.push(sessionData);
+                    addResult(`Session ${i + 1}: ${sessionData.sessionId} - ${sessionData.startingCity}`, 'pass');
+                    
+                    // Reset for next session
+                    gameController.gameState.resetGameState();
+                    
+                } catch (error) {
+                    addResult(`Session ${i + 1}: Error - ${error.message}`, 'fail');
+                }
+            }
+            
+            // Validate session independence
+            const uniqueSessionIds = new Set(sessions.map(s => s.sessionId));
+            const uniqueRoutes = new Set(sessions.map(s => s.route.join('-')));
+            
+            addResult(`Session independence: ${uniqueSessionIds.size} unique session IDs`, 
+                uniqueSessionIds.size === sessions.length ? 'pass' : 'fail');
+            addResult(`Route independence: ${uniqueRoutes.size} unique routes`, 
+                uniqueRoutes.size >= Math.min(3, sessions.length) ? 'pass' : 'info');
+            
+            // Check for data contamination
+            let hasContamination = false;
+            for (let i = 1; i < sessions.length; i++) {
+                if (sessions[i].route.join('-') === sessions[i-1].route.join('-')) {
+                    hasContamination = true;
+                    break;
+                }
+            }
+            
+            addResult(`Data contamination check: ${hasContamination ? 'CONTAMINATION DETECTED' : 'CLEAN'}`, 
+                hasContamination ? 'fail' : 'pass');
+        };
+
+        // Clear test results
+        window.clearResults = function() {
+            document.getElementById('test-results').innerHTML = '';
+            testResults = [];
+        };
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            addResult('Fair Randomization Integration Test Suite loaded', 'info');
+            addResult('Click "Run Integration Test" to begin testing', 'info');
+        });
+    </script>
+</body>
+</html>

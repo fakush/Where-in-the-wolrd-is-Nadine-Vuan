@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clue Collection Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #2d5a27; }
+        .error { background: #5a2727; }
+        .info { background: #27455a; }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+        #game-frame {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #444;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Clue Collection Error Fix Test</h1>
+    
+    <div class="test-result info">
+        <h3>🐛 Issue Fixed</h3>
+        <p><strong>Error:</strong> "Cannot read properties of undefined (reading 'length')" at UIManager.js:845</p>
+        <p><strong>Root Cause:</strong> InformantSystem.showInformantDialogue() was returning a string instead of an object with text property</p>
+        <p><strong>Solution:</strong> Updated method to return proper structure and added safety checks</p>
+    </div>
+
+    <div class="test-result success">
+        <h3>🔧 Changes Made</h3>
+        <ul>
+            <li>✅ Fixed InformantSystem.showInformantDialogue() return structure</li>
+            <li>✅ Added safety checks in UIManager.displayInformantDialogue()</li>
+            <li>✅ Added safety checks in UIManager.typeDialogue()</li>
+            <li>✅ Proper error handling for undefined text parameters</li>
+        </ul>
+    </div>
+
+    <div class="test-result info">
+        <h3>🎮 Test Instructions</h3>
+        <ol>
+            <li>Click "Load Game" below</li>
+            <li>Start a new game</li>
+            <li>Click "Collect Clues" button</li>
+            <li>Verify no error occurs and dialogue appears</li>
+            <li>Check browser console for any errors</li>
+        </ol>
+    </div>
+
+    <button onclick="loadGame()">🎮 Load Game</button>
+    <button onclick="checkConsole()">🔍 Check Console</button>
+    <button onclick="location.reload()">🔄 Refresh Test</button>
+
+    <iframe id="game-frame" src="about:blank"></iframe>
+
+    <script>
+        function loadGame() {
+            const frame = document.getElementById('game-frame');
+            frame.src = 'http://localhost:8000/src/index.html';
+            
+            frame.onload = function() {
+                console.log('✅ Game loaded successfully');
+                addTestResult('Game loaded successfully! Try clicking "Collect Clues" to test the fix.', 'success');
+            };
+            
+            frame.onerror = function() {
+                console.error('❌ Failed to load game');
+                addTestResult('Failed to load game - check console for errors', 'error');
+            };
+        }
+
+        function checkConsole() {
+            addTestResult('Check the browser console (F12) for any JavaScript errors', 'info');
+        }
+
+        function addTestResult(message, type) {
+            const container = document.body;
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.innerHTML = `<p><strong>${new Date().toLocaleTimeString()}:</strong> ${message}</p>`;
+            container.insertBefore(result, document.getElementById('game-frame'));
+        }
+
+        // Log test start
+        console.log('🧪 Clue Collection Fix Test Started');
+        console.log('📋 Testing for:');
+        console.log('  1. No "Cannot read properties of undefined" errors');
+        console.log('  2. Proper dialogue display when collecting clues');
+        console.log('  3. Safe handling of undefined parameters');
+    </script>
+</body>
+</html>

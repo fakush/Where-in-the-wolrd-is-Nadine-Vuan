@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modular Game Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #2d5a27; }
+        .error { background: #5a2727; }
+        .info { background: #27455a; }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+        #game-frame {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #444;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🕵️ Modular Game Fix Test</h1>
+    
+    <div class="test-result info">
+        <h3>✅ Fix Applied</h3>
+        <p><strong>Issue:</strong> Infinite loop when clicking "Collect Clues" button</p>
+        <p><strong>Root Cause:</strong> Both monolithic game.js and modular game_modular.js were loading, causing duplicate event listeners</p>
+        <p><strong>Solution:</strong> Removed monolithic game.js file and use only the modular version</p>
+    </div>
+
+    <div class="test-result success">
+        <h3>🔧 Changes Made</h3>
+        <ul>
+            <li>✅ Removed src/game.js (monolithic version)</li>
+            <li>✅ Updated index.html to only load game_modular.js</li>
+            <li>✅ Eliminated duplicate DOMContentLoaded event listeners</li>
+            <li>✅ Cleaned up module detection code</li>
+        </ul>
+    </div>
+
+    <div class="test-result info">
+        <h3>🎮 Test Instructions</h3>
+        <ol>
+            <li>Click "Load Game" below to test the modular version</li>
+            <li>Start a new game</li>
+            <li>Click "Collect Clues" button</li>
+            <li>Verify no infinite loop occurs</li>
+            <li>Check browser console for any errors</li>
+        </ol>
+    </div>
+
+    <button onclick="loadGame()">🎮 Load Game</button>
+    <button onclick="checkConsole()">🔍 Check Console</button>
+    <button onclick="location.reload()">🔄 Refresh Test</button>
+
+    <iframe id="game-frame" src="about:blank"></iframe>
+
+    <script>
+        function loadGame() {
+            const frame = document.getElementById('game-frame');
+            frame.src = 'http://localhost:8001/index.html';
+            
+            // Add load event listener to check for errors
+            frame.onload = function() {
+                console.log('✅ Game loaded successfully in modular mode');
+                addTestResult('Game loaded successfully!', 'success');
+            };
+            
+            frame.onerror = function() {
+                console.error('❌ Failed to load game');
+                addTestResult('Failed to load game - check console for errors', 'error');
+            };
+        }
+
+        function checkConsole() {
+            addTestResult('Check the browser console (F12) for any JavaScript errors or infinite loop messages', 'info');
+        }
+
+        function addTestResult(message, type) {
+            const container = document.body;
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.innerHTML = `<p><strong>${new Date().toLocaleTimeString()}:</strong> ${message}</p>`;
+            container.insertBefore(result, document.getElementById('game-frame'));
+        }
+
+        // Log test start
+        console.log('🧪 Modular Game Fix Test Started');
+        console.log('📋 Test Checklist:');
+        console.log('  1. No duplicate event listeners');
+        console.log('  2. No infinite loops on clue collection');
+        console.log('  3. Clean modular architecture');
+        console.log('  4. Proper ES6 module loading');
+    </script>
+</body>
+</html>

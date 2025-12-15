@@ -7,6 +7,7 @@ import { GameState } from './GameState.js';
 import { UIState } from './UIState.js';
 import { DataValidator } from './DataValidator.js';
 import { ClueSystem } from './ClueSystem.js';
+import { InformantSystem } from './InformantSystem.js';
 import { FailureHandler } from './FailureHandler.js';
 import { SessionManager } from './SessionManager.js';
 import { UIManager } from './UIManager.js';
@@ -20,6 +21,7 @@ export class GameController {
         this.uiState = new UIState();
         this.randomizationSystem = new RandomizationSystem(this.gameState);
         this.clueSystem = new ClueSystem(this.gameState, this.randomizationSystem);
+        this.informantSystem = new InformantSystem(this.gameState, this.clueSystem);
         this.failureHandler = new FailureHandler(this.gameState);
         this.sessionManager = new SessionManager(this.gameState, null); // UIManager will be set later
         this.uiManager = new UIManager(this);
@@ -204,21 +206,32 @@ export class GameController {
 
     // Start new game
     startGame() {
-        this.gameState.initializeGame();
-        this.gameState.phase = 'investigation';
-        
-        // Initialize randomization system for new game
+        // Initialize randomization system first for new game
         this.randomizationSystem.initialize();
 
-        // Select random starting city using fair randomization
-        const startingCity = this.selectFairStartingCity();
-        if (!startingCity) {
-            console.error('Could not select starting city');
-            this.uiManager.showError('Failed to start game: No starting cities available');
+        // Initialize game state with route generation using fair randomization
+        this.gameState.initializeGame(this.gameState.gameData, this.randomizationSystem);
+        this.gameState.phase = 'investigation';
+
+        // Ensure we have a valid route and starting city
+        if (!this.gameState.cityRoute || this.gameState.cityRoute.length === 0) {
+            console.error('Failed to generate city route');
+            this.uiManager.showError('Failed to start game: Could not generate route');
             return;
         }
-        
-        this.gameState.currentCity = startingCity.id;
+
+        // The starting city should already be set by initializeGame
+        if (!this.gameState.currentCity) {
+            console.error('No starting city set');
+            this.uiManager.showError('Failed to start game: No starting city available');
+            return;
+        }
+
+        // Validate randomization quality
+        const randomizationStats = this.randomizationSystem.getRandomizationStats();
+        console.log('Game started with fair randomization:', randomizationStats);
+        console.log('Generated route:', this.gameState.cityRoute);
+        console.log('Starting city:', this.gameState.currentCity);
         
         this.gameState.saveGameState();
         this.uiManager.showScreen('investigation-screen');
@@ -265,7 +278,7 @@ export class GameController {
         this.updateProgressDisplay();
     }
 
-    // Collect clues from current city
+    // Collect clues from current city using enhanced clue progression system
     collectClues() {
         const cityData = this.getCityData(this.gameState.currentCity);
         
@@ -274,23 +287,74 @@ export class GameController {
             return;
         }
         
-        // Use the clue system to present clues
+        // Show initial informant greeting
+        this.showInformantDialogue(this.gameState.currentCity, 'greeting');
+
+        // Use the enhanced clue system with progression logic
         const collectedClues = this.presentCluesWithDifficulty(this.gameState.currentCity);
         
         if (collectedClues.length > 0) {
-            // Provide positive feedback for successful clue collection
-            this.uiManager.showFeedbackMessage('Clues collected successfully!', 'success');
+            // Show clue presentation dialogue
+            this.showInformantDialogue(this.gameState.currentCity, 'clue_presentation');
+
+            // Update current clue difficulty level based on collected clues
+            // Use the hardest difficulty collected for scoring purposes
+            const difficulties = ['easy', 'medium', 'hard'];
+            const hardestDifficulty = collectedClues.reduce((hardest, clue) => {
+                const currentIndex = difficulties.indexOf(clue.difficulty);
+                const hardestIndex = difficulties.indexOf(hardest);
+                return currentIndex > hardestIndex ? clue.difficulty : hardest;
+            }, 'easy');
+
+            this.gameState.currentClueLevel = hardestDifficulty;
+
+            // Provide positive feedback for successful clue collection with point information
+            const totalPoints = collectedClues.reduce((sum, clue) => sum + (clue.pointValue || 1), 0);
+            this.uiManager.showFeedbackMessage(
+                `Clues collected successfully! +${totalPoints} points`,
+                'success'
+            );
+
+            // Show helpful farewell
+            setTimeout(() => {
+                this.showInformantDialogue(this.gameState.currentCity, 'farewell_helpful');
+            }, 2000);
+
+            // Validate clue consistency after collection
+            const validationResult = this.clueSystem.validateClueConsistency();
+            if (!validationResult.isValid) {
+                console.warn('Clue consistency issues detected:', validationResult.errors);
+                // Auto-repair if needed
+                this.clueSystem.repairClueConsistency();
+            }
+
             this.gameState.saveGameState();
         } else {
+            // Show "not here" response
+            this.showInformantDialogue(this.gameState.currentCity, 'not_here');
+
             // Provide helpful feedback for no clues found
             this.uiManager.showFeedbackMessage('No clues found in this city.', 'info');
+
+            // Show unhelpful farewell
+            setTimeout(() => {
+                this.showInformantDialogue(this.gameState.currentCity, 'farewell_unhelpful');
+            }, 2000);
+        }
+
+        // Check for investigation completion
+        const completionStatus = this.detectInvestigationCompletion();
+        if (completionStatus.isComplete) {
+            setTimeout(() => {
+                this.uiManager.showFeedbackMessage(completionStatus.message, 'info');
+            }, 3000);
         }
         
         // Update progress display
         this.updateProgressDisplay();
     }
 
-    // Present clues with difficulty selection
+    // Present clues with automatic difficulty progression (hard → medium → easy)
     presentCluesWithDifficulty(cityId, requestedDifficulty = null) {
         const cityData = this.getCityData(cityId);
         
@@ -299,25 +363,22 @@ export class GameController {
             return [];
         }
         
-        let clueOptions = {};
+        let clues = [];
         
         if (requestedDifficulty && ['easy', 'medium', 'difficult'].includes(requestedDifficulty)) {
-            clueOptions = {
-                maxCluesPerDifficulty: 2,
+            // Use specific difficulty if requested
+            const clueOptions = {
+                maxCluesPerDifficulty: 1,
                 randomizeSelection: true,
                 includeAllDifficulties: false,
                 specificDifficulty: requestedDifficulty
             };
+            clues = this.clueSystem.generateClues(cityData, clueOptions);
         } else {
-            clueOptions = {
-                maxCluesPerDifficulty: 1,
-                randomizeSelection: true,
-                includeAllDifficulties: true
-            };
+            // Use automatic progression system (hard → medium → easy)
+            clues = this.clueSystem.getCluesWithProgression(cityId, true);
         }
-        
-        const clues = this.clueSystem.generateClues(cityData, clueOptions);
-        
+
         if (clues.length > 0) {
             const addedClues = [];
             clues.forEach(clue => {
@@ -328,6 +389,17 @@ export class GameController {
             
             if (addedClues.length > 0) {
                 this.uiManager.showCluesCollected(addedClues);
+
+                // Show progression feedback
+                const nextDifficulty = this.clueSystem.getNextClueDifficulty(cityId);
+                if (nextDifficulty !== clues[0].difficulty) {
+                    setTimeout(() => {
+                        this.uiManager.showFeedbackMessage(
+                            `Next clue will be ${nextDifficulty} difficulty`,
+                            'info'
+                        );
+                    }, 2000);
+                }
             }
             
             return addedClues;
@@ -344,7 +416,7 @@ export class GameController {
         this.uiManager.showWorldMap();
     }
 
-    // Travel to selected city
+    // Travel to selected city with guess validation and scoring
     travelToCity(cityId) {
         // Validate travel possibility
         const travelCheck = this.canTravelToCity(cityId);
@@ -372,6 +444,48 @@ export class GameController {
             return;
         }
 
+        // Validate guess against predetermined route
+        const guessResult = this.validateGuessAgainstRoute(cityId);
+
+        if (guessResult.isCorrect) {
+            // Handle correct guess
+            this.handleCorrectGuess(cityId, guessResult);
+        } else {
+            // Handle incorrect guess
+            this.handleIncorrectGuess(cityId, guessResult);
+        }
+    }
+
+    // Validate guess against the predetermined route
+    validateGuessAgainstRoute(cityId) {
+        const nextCityInRoute = this.gameState.getNextCityInRoute();
+
+        if (!nextCityInRoute) {
+            // Already at final destination or route not properly initialized
+            return {
+                isCorrect: false,
+                reason: 'no_next_city',
+                message: 'No next destination in route'
+            };
+        }
+
+        const isCorrect = cityId === nextCityInRoute;
+
+        return {
+            isCorrect: isCorrect,
+            expectedCity: nextCityInRoute,
+            guessedCity: cityId,
+            reason: isCorrect ? 'correct_destination' : 'incorrect_destination',
+            message: isCorrect ?
+                'Correct destination! Following the trail perfectly.' :
+                'Incorrect destination. Nadine wasn\'t here.'
+        };
+    }
+
+    // Handle correct guess with scoring and journey completion detection
+    handleCorrectGuess(cityId, guessResult) {
+        const cityData = this.getCityData(cityId);
+
         // Add current city to visited cities before moving
         if (this.gameState.currentCity && !this.gameState.visitedCities.includes(this.gameState.currentCity)) {
             this.gameState.visitedCities.push(this.gameState.currentCity);
@@ -382,35 +496,174 @@ export class GameController {
         this.gameState.currentCity = cityId;
         this.gameState.gameStats.citiesVisited++;
         
-        // Check if this city has no clues (wrong destination) - reduce attempts
-        if (!this.hasCityClues(cityId) && !cityData.is_final) {
-            this.gameState.gameStats.attemptsRemaining--;
+        // Advance to next city in route
+        this.gameState.advanceToNextCity();
+
+        // Award points based on current clue difficulty level
+        const pointsAwarded = this.awardPointsForCorrectGuess();
+
+        // Check for journey completion after 4 cities (before Buenos Aires)
+        const journeyStatus = this.checkJourneyCompletion();
+
+        // Log successful travel
+        console.log(`Correct guess: ${previousCity || 'Starting location'} → ${cityData.name} (+${pointsAwarded} points)`);
+        console.log(`Journey status:`, journeyStatus);
+
+        // Provide positive feedback with score information
+        let feedbackMessage = `Excellent detective work! +${pointsAwarded} points`;
+        if (journeyStatus.shouldPresentFinalDestination) {
+            feedbackMessage += ` | ${journeyStatus.message}`;
         }
-        
-        // Log travel for debugging
-        console.log(`Travel: ${previousCity || 'Starting location'} → ${cityData.name}`);
+
+        this.uiManager.showFeedbackMessage(
+            feedbackMessage,
+            'success',
+            { icon: 'fas fa-check-circle', duration: 3000 }
+        );
         
         // Show travel animation and transition
         this.uiManager.animateTravel(previousCity, cityId, () => {
             // Check if this is the final destination
             if (cityData.is_final) {
                 this.triggerFinalEncounter();
+            } else if (journeyStatus.shouldPresentFinalDestination) {
+                // Present Buenos Aires as the final destination after 4 cities
+                this.presentFinalDestination();
             } else {
-                // Check for failure conditions after travel
-                const failureCheck = this.failureHandler.checkFailureConditions();
-                if (failureCheck.hasFailed) {
-                    this.triggerGameOver(failureCheck);
-                    return;
-                }
-                
                 this.gameState.phase = 'investigation';
                 this.uiManager.showScreen('investigation-screen');
                 this.uiManager.updateInvestigationScreen(cityId);
             }
         });
+
+        this.gameState.saveGameState();
+        this.updateProgressDisplay();
+    }
+
+    // Check journey completion status after each successful city visit
+    checkJourneyCompletion() {
+        const citiesCompleted = this.gameState.gameStats.citiesCompleted;
+        const totalCitiesInRoute = this.gameState.cityRoute.length;
+        const currentCityData = this.getCityData(this.gameState.currentCity);
+
+        // Check if we've completed 4 cities and are ready for Buenos Aires
+        if (citiesCompleted === 4 && totalCitiesInRoute === 5) {
+            return {
+                shouldPresentFinalDestination: true,
+                isJourneyComplete: false,
+                message: 'Four cities completed! Buenos Aires awaits as your final destination.',
+                nextAction: 'present_final_destination',
+                progress: '4/5 cities completed'
+            };
+        }
+
+        // Check if we're at the final destination (Buenos Aires)
+        if (currentCityData && currentCityData.is_final) {
+            return {
+                shouldPresentFinalDestination: false,
+                isJourneyComplete: true,
+                message: 'Journey complete! You have found Nadine in Buenos Aires!',
+                nextAction: 'trigger_final_encounter',
+                progress: '5/5 cities completed'
+            };
+        }
+
+        // Normal journey progression
+        return {
+            shouldPresentFinalDestination: false,
+            isJourneyComplete: false,
+            message: `Journey continues... ${citiesCompleted}/${totalCitiesInRoute} cities completed.`,
+            nextAction: 'continue_investigation',
+            progress: `${citiesCompleted}/${totalCitiesInRoute} cities completed`
+        };
+    }
+
+    // Present Buenos Aires as the final destination after 4 cities
+    presentFinalDestination() {
+        // Show special message about reaching the final stage
+        this.uiManager.showFeedbackMessage(
+            '🎯 Final Stage: Buenos Aires is your last destination! Nadine awaits...',
+            'info',
+            { icon: 'fas fa-flag-checkered', duration: 5000 }
+        );
+
+        // Transition to travel screen with Buenos Aires highlighted
+        setTimeout(() => {
+            this.gameState.phase = 'travel';
+            this.uiManager.showScreen('travel-screen');
+            this.uiManager.showWorldMapWithFinalDestination();
+        }, 2000);
+    }
+
+    // Handle incorrect guess with attempt deduction and "not here" scene
+    handleIncorrectGuess(cityId, guessResult) {
+        const cityData = this.getCityData(cityId);
+
+        // Deduct one attempt for incorrect guess
+        this.gameState.gameStats.attemptsRemaining--;
+
+        // Log incorrect guess
+        console.log(`Incorrect guess: ${cityId} (Expected: ${guessResult.expectedCity}). Attempts remaining: ${this.gameState.gameStats.attemptsRemaining}`);
+
+        // Display "not here" scene for incorrect guess
+        this.displayNotHereScene(cityData);
+
+        // Provide feedback about incorrect guess
+        this.uiManager.showFeedbackMessage(
+            `Nadine wasn't in ${cityData.name}. ${this.gameState.gameStats.attemptsRemaining} attempts remaining.`,
+            'warning',
+            { icon: 'fas fa-exclamation-triangle', duration: 4000 }
+        );
+
+        // Check for failure conditions after reducing attempts
+        const failureCheck = this.failureHandler.checkFailureConditions();
+        if (failureCheck.hasFailed) {
+            this.triggerGameOver(failureCheck);
+            return;
+        }
+
+        // Return to travel screen for another attempt
+        setTimeout(() => {
+            this.gameState.phase = 'travel';
+            this.uiManager.showScreen('travel-screen');
+            this.uiManager.showWorldMap();
+        }, 3000);
         
         this.gameState.saveGameState();
         this.updateProgressDisplay();
+    }
+
+    // Award points based on current clue difficulty level
+    awardPointsForCorrectGuess() {
+        const currentClueLevel = this.gameState.currentClueLevel || 'easy';
+
+        const pointValues = {
+            'hard': 3,
+            'medium': 2,
+            'easy': 1
+        };
+
+        const points = pointValues[currentClueLevel] || 1;
+        this.gameState.gameStats.score += points;
+
+        return points;
+    }
+
+    // Display "not here" scene for incorrect guesses
+    displayNotHereScene(cityData) {
+        // Show the "not here" scene image
+        const notHereImagePath = `../assets/scenes/${cityData.id}_notHere.png`;
+        this.uiManager.showNotHereScene(cityData, notHereImagePath);
+
+        // Display informant's "not here" response
+        const notHereResponse = cityData.not_here_response ||
+            `No, that person hasn't been here. Try looking elsewhere.`;
+
+        this.uiManager.displayInformantDialogue(
+            notHereResponse,
+            cityData.informant?.name || 'Local Informant',
+            'not_here'
+        );
     }
 
     // Trigger final encounter
@@ -428,7 +681,7 @@ export class GameController {
         this.gameState.saveGameState();
     }
 
-    // Trigger game over sequence
+    // Trigger game over sequence with enhanced detection
     triggerGameOver(failureResult) {
         this.gameState.phase = 'game_over';
         this.gameState.isGameComplete = true;
@@ -437,19 +690,62 @@ export class GameController {
         // Save the failure details for display
         this.gameState.failureDetails = failureResult;
         
+        // Calculate final statistics for game over display
+        const finalStats = this.failureHandler.calculateEnhancedStats();
+        failureResult.details = {
+            ...failureResult.details,
+            ...finalStats,
+            finalScore: this.gameState.gameStats.score,
+            citiesCompleted: this.gameState.gameStats.citiesCompleted,
+            routeProgress: `${this.gameState.currentCityIndex}/${this.gameState.cityRoute.length}`,
+            investigationSummary: this.generateInvestigationSummary()
+        };
+
         this.gameState.saveGameState();
         
-        // Show game over screen with appropriate messaging
+        // Show game over screen with comprehensive messaging
         this.uiManager.showGameOverScreen(failureResult);
         
         // Log failure for analytics
         console.log('Game Over:', failureResult);
+        console.log('Final Investigation Summary:', failureResult.details.investigationSummary);
     }
 
-    // Show clues screen
+    // Generate investigation summary for game over display
+    generateInvestigationSummary() {
+        const summary = {
+            routeProgress: `Completed ${this.gameState.currentCityIndex} of ${this.gameState.cityRoute.length} cities`,
+            citiesVisited: this.gameState.visitedCities.length,
+            cluesCollected: this.gameState.collectedClues.length,
+            averageCluesPerCity: this.gameState.visitedCities.length > 0 ?
+                (this.gameState.collectedClues.length / this.gameState.visitedCities.length).toFixed(1) : 0,
+            highestScoringClue: this.getHighestScoringClue(),
+            investigationPath: this.gameState.visitedCities.join(' → '),
+            nextDestination: this.gameState.getNextCityInRoute()
+        };
+
+        return summary;
+    }
+
+    // Get highest scoring clue for summary
+    getHighestScoringClue() {
+        if (this.gameState.collectedClues.length === 0) return null;
+
+        const pointValues = { 'hard': 3, 'medium': 2, 'easy': 1 };
+        return this.gameState.collectedClues.reduce((highest, clue) => {
+            const cluePoints = pointValues[clue.difficulty] || 0;
+            const highestPoints = pointValues[highest.difficulty] || 0;
+            return cluePoints > highestPoints ? clue : highest;
+        });
+    }
+
+    // Show clues screen with enhanced evidence interface
     showCluesScreen() {
         this.uiManager.showScreen('clues-screen');
-        this.uiManager.updateCluesScreen(this.gameState.collectedClues);
+
+        // Use enhanced evidence interface
+        const evidenceData = this.clueSystem.buildEvidenceInterface('evidence_board');
+        this.uiManager.updateCluesScreen(this.gameState.collectedClues, evidenceData);
     }
 
     // Back to investigation
@@ -468,6 +764,9 @@ export class GameController {
 
             // Reset randomization system for fresh session
             this.randomizationSystem.initialize();
+
+            // Reset informant dialogue state for fresh session
+            this.informantSystem.resetDialogueState();
 
             // Ensure session isolation
             const isolationResults = this.sessionManager.ensureSessionIsolation();
@@ -803,6 +1102,205 @@ export class GameController {
         };
     }
 
+    // Add randomization testing and validation methods for task 10.1
+    addRandomizationTestingAndValidation() {
+        console.log('Adding randomization testing and validation capabilities...');
+
+        // Test starting city fairness
+        const startingCityFairness = this.testStartingCityFairness(50);
+        console.log('Starting city fairness test results:', startingCityFairness);
+
+        // Test route generation fairness
+        const routeGenerationFairness = this.testRouteGenerationFairness(50);
+        console.log('Route generation fairness test results:', routeGenerationFairness);
+
+        // Validate overall randomization system
+        const systemValidation = this.validateRandomizationSystem();
+        console.log('Randomization system validation:', systemValidation);
+
+        return {
+            startingCityFairness: startingCityFairness,
+            routeGenerationFairness: routeGenerationFairness,
+            systemValidation: systemValidation,
+            overallQuality: this.calculateOverallRandomizationQuality(
+                startingCityFairness,
+                routeGenerationFairness,
+                systemValidation
+            )
+        };
+    }
+
+    // Test starting city selection fairness
+    testStartingCityFairness(iterations = 50) {
+        if (!this.gameState.gameData || !this.gameState.gameData.cities) {
+            return { error: 'Game data not loaded' };
+        }
+
+        const results = {
+            iterations: iterations,
+            selections: {},
+            fairnessScore: 0,
+            isBalanced: false,
+            errors: []
+        };
+
+        const nonFinalCities = this.gameState.gameData.cities.filter(city => !city.is_final);
+
+        // Initialize selection counters
+        nonFinalCities.forEach(city => {
+            results.selections[city.id] = 0;
+        });
+
+        // Run fairness test
+        for (let i = 0; i < iterations; i++) {
+            try {
+                const selectedCity = this.randomizationSystem.selectRandomStartingCity(this.gameState.gameData.cities);
+                if (selectedCity && selectedCity.id) {
+                    results.selections[selectedCity.id]++;
+                } else {
+                    results.errors.push(`Iteration ${i}: No city selected`);
+                }
+            } catch (error) {
+                results.errors.push(`Iteration ${i}: ${error.message}`);
+            }
+        }
+
+        // Calculate fairness score
+        const expectedFrequency = iterations / nonFinalCities.length;
+        let totalDeviation = 0;
+
+        Object.values(results.selections).forEach(count => {
+            totalDeviation += Math.abs(count - expectedFrequency);
+        });
+
+        results.fairnessScore = Math.max(0, 1 - (totalDeviation / iterations));
+        results.isBalanced = results.fairnessScore >= 0.7; // 70% fairness threshold
+
+        return results;
+    }
+
+    // Test route generation fairness
+    testRouteGenerationFairness(iterations = 50) {
+        if (!this.gameState.gameData || !this.gameState.gameData.cities) {
+            return { error: 'Game data not loaded' };
+        }
+
+        const results = {
+            iterations: iterations,
+            cityAppearances: {},
+            routeValidations: { valid: 0, invalid: 0 },
+            fairnessScore: 0,
+            isBalanced: false,
+            errors: []
+        };
+
+        const nonFinalCities = this.gameState.gameData.cities.filter(city => !city.is_final);
+
+        // Initialize appearance counters
+        nonFinalCities.forEach(city => {
+            results.cityAppearances[city.id] = 0;
+        });
+
+        // Run route generation test
+        for (let i = 0; i < iterations; i++) {
+            try {
+                const route = this.gameState.generateCityRoute(this.gameState.gameData, this.randomizationSystem);
+
+                if (route && route.length === 5) {
+                    // Count city appearances (first 4 cities, excluding Buenos Aires)
+                    route.slice(0, 4).forEach(cityId => {
+                        if (results.cityAppearances[cityId] !== undefined) {
+                            results.cityAppearances[cityId]++;
+                        }
+                    });
+
+                    // Validate route
+                    const validation = this.gameState.validateGeneratedRoute(route, this.gameState.gameData);
+                    if (validation.isValid) {
+                        results.routeValidations.valid++;
+                    } else {
+                        results.routeValidations.invalid++;
+                        results.errors.push(`Iteration ${i}: Invalid route - ${validation.errors.join(', ')}`);
+                    }
+                } else {
+                    results.routeValidations.invalid++;
+                    results.errors.push(`Iteration ${i}: Invalid route length or null route`);
+                }
+            } catch (error) {
+                results.routeValidations.invalid++;
+                results.errors.push(`Iteration ${i}: ${error.message}`);
+            }
+        }
+
+        // Calculate fairness score for city appearances
+        const totalAppearances = Object.values(results.cityAppearances).reduce((sum, count) => sum + count, 0);
+        const expectedAppearances = totalAppearances / nonFinalCities.length;
+        let totalDeviation = 0;
+
+        Object.values(results.cityAppearances).forEach(count => {
+            totalDeviation += Math.abs(count - expectedAppearances);
+        });
+
+        results.fairnessScore = totalAppearances > 0 ?
+            Math.max(0, 1 - (totalDeviation / totalAppearances)) : 0;
+        results.isBalanced = results.fairnessScore >= 0.6; // 60% fairness threshold for routes
+
+        return results;
+    }
+
+    // Calculate overall randomization quality
+    calculateOverallRandomizationQuality(startingCityResults, routeResults, systemValidation) {
+        const scores = {
+            startingCityFairness: startingCityResults.fairnessScore || 0,
+            routeGenerationFairness: routeResults.fairnessScore || 0,
+            systemIntegrity: systemValidation.overallValid ? 1 : 0,
+            errorRate: 1 - ((startingCityResults.errors?.length || 0) + (routeResults.errors?.length || 0)) / 100
+        };
+
+        const overallScore = (
+            scores.startingCityFairness * 0.3 +
+            scores.routeGenerationFairness * 0.4 +
+            scores.systemIntegrity * 0.2 +
+            scores.errorRate * 0.1
+        );
+
+        return {
+            scores: scores,
+            overallScore: overallScore,
+            quality: overallScore >= 0.8 ? 'excellent' :
+                overallScore >= 0.6 ? 'good' :
+                    overallScore >= 0.4 ? 'fair' : 'poor',
+            recommendations: this.generateRandomizationRecommendations(scores)
+        };
+    }
+
+    // Generate recommendations for improving randomization
+    generateRandomizationRecommendations(scores) {
+        const recommendations = [];
+
+        if (scores.startingCityFairness < 0.7) {
+            recommendations.push('Improve starting city selection fairness - consider adjusting selection history tracking');
+        }
+
+        if (scores.routeGenerationFairness < 0.6) {
+            recommendations.push('Enhance route generation balance - ensure all cities have equal opportunity to appear');
+        }
+
+        if (scores.systemIntegrity < 1) {
+            recommendations.push('Fix randomization system integrity issues - check system validation errors');
+        }
+
+        if (scores.errorRate < 0.9) {
+            recommendations.push('Reduce randomization errors - improve error handling and validation');
+        }
+
+        if (recommendations.length === 0) {
+            recommendations.push('Randomization system is performing well - continue monitoring');
+        }
+
+        return recommendations;
+    }
+
     // Show loading screen
     showLoadingScreen() {
         const loadingScreen = document.getElementById('loading-screen');
@@ -822,5 +1320,38 @@ export class GameController {
         if (loadingScreen) {
             loadingScreen.classList.remove('active');
         }
+    }
+
+    // Informant System delegation methods
+
+    // Create showInformantDialogue() function
+    showInformantDialogue(cityId, dialogueType = 'greeting') {
+        const dialogueData = this.informantSystem.showInformantDialogue(cityId, dialogueType);
+
+        // Integrate with UI system
+        if (this.uiManager && this.uiManager.displayInformantDialogue) {
+            this.uiManager.displayInformantDialogue(
+                dialogueData.text,
+                dialogueData.informantName,
+                dialogueData.dialogueType
+            );
+        }
+
+        return dialogueData.text;
+    }
+
+    // Create investigation completion detection
+    detectInvestigationCompletion() {
+        return this.informantSystem.detectInvestigationCompletion(this.gameState.currentCity);
+    }
+
+    // Get informant dialogue statistics
+    getInformantStatistics() {
+        return this.informantSystem.getDialogueStatistics();
+    }
+
+    // Validate informant system integrity
+    validateInformantSystem() {
+        return this.informantSystem.validateInformantData();
     }
 }
