@@ -64,12 +64,15 @@ The game features a **retro 1980s educational game aesthetic** reminiscent of th
 │   │
 │   └── /data
 │       └── game_data.json
+├── /modules
+│   ├── AssetLoader.js
+│   └── ... (other modules)
+├── /tests
+│   └── ... (test files)
 │
-├── /src
-│   ├── index.html
-│   ├── styles.css
-│   └── game.js
-│
+├── index.html
+├── styles.css
+└── game_modular.js
 ├── README.md
 └── LICENSE
 ```
