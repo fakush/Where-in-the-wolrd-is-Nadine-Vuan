@@ -4202,3 +4202,100 @@ img[src*="data:image/svg+xml"] {
     text-shadow: 0 0 10px var(--retro-blue);
     line-height: 1.5;
 }
+
+/* Map Interaction Hints */
+.map-interaction-hint {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--detective-yellow);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-family: 'Audiowide', monospace;
+    font-size: 0.9rem;
+    z-index: 1000;
+    animation: hintPulse 2s ease-in-out infinite;
+    transition: opacity 0.5s ease;
+}
+
+.hint-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hint-content i {
+    color: var(--neon-pink);
+    animation: pointingFinger 1.5s ease-in-out infinite;
+}
+
+@keyframes hintPulse {
+
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes pointingFinger {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+/* City marker button improvements - much smaller, compact design */
+.city-marker-button {
+    min-width: 60px;
+    max-width: 80px;
+    padding: 3px 6px;
+    font-size: 0.6rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 100;
+    border-radius: 8px;
+    line-height: 1.2;
+}
+
+/* Removed extra styling to keep buttons compact */
+
+/* Responsive adjustments for city markers */
+@media (max-width: 768px) {
+    .city-marker-button {
+        min-width: 50px;
+        max-width: 70px;
+        font-size: 0.5rem;
+        padding: 2px 4px;
+    }
+
+    .map-interaction-hint {
+        font-size: 0.8rem;
+        padding: 8px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .city-marker-button {
+        min-width: 40px;
+        max-width: 60px;
+        font-size: 0.45rem;
+        padding: 2px 3px;
+    }
+}
+
+.final-destination-label {
+    font-size: 0.5rem;
+}
+}

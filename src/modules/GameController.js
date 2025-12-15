@@ -237,6 +237,9 @@ export class GameController {
         this.uiManager.showScreen('investigation-screen');
         this.updateProgressDisplay();
         this.uiManager.updateInvestigationScreen(this.gameState.currentCity);
+
+        // Show initial greeting dialogue when starting in the first city
+        this.showInformantDialogue(this.gameState.currentCity, 'greeting');
     }
 
     // Process player actions
@@ -278,24 +281,38 @@ export class GameController {
         this.updateProgressDisplay();
     }
 
-    // Collect clues from current city using enhanced clue progression system
+    // Collect clues from current city about the NEXT city in the route
     collectClues() {
-        const cityData = this.getCityData(this.gameState.currentCity);
+        const currentCityData = this.getCityData(this.gameState.currentCity);
         
-        if (!cityData) {
+        if (!currentCityData) {
             this.uiManager.showError('Unable to collect clues: City data not found');
             return;
         }
-        
-        // Show initial informant greeting
-        this.showInformantDialogue(this.gameState.currentCity, 'greeting');
 
-        // Use the enhanced clue system with progression logic
-        const collectedClues = this.presentCluesWithDifficulty(this.gameState.currentCity);
+        // Get the next city in the route - this is what the clues should be about
+        const nextCityId = this.gameState.getNextCityInRoute();
+
+        if (!nextCityId) {
+            this.uiManager.showError('No next destination available');
+            return;
+        }
+
+        // Check if current city has clues about the next city
+        const hasClues = this.hasCityClues(this.gameState.currentCity);
+
+        if (!hasClues) {
+            // Show "not here" response - Nadine wasn't in this city
+            this.showInformantDialogue(this.gameState.currentCity, 'not_here');
+            this.uiManager.showFeedbackMessage('No clues found in this city.', 'info');
+            return;
+        }
+
+        // Use the enhanced clue system with progression logic to get clues about the NEXT city
+        const collectedClues = this.presentCluesAboutNextCity(this.gameState.currentCity, nextCityId);
         
         if (collectedClues.length > 0) {
-            // Show clue presentation dialogue
-            this.showInformantDialogue(this.gameState.currentCity, 'clue_presentation');
+            // Clues are already displayed in dialogue format by presentCluesAboutNextCity
 
             // Update current clue difficulty level based on collected clues
             // Use the hardest difficulty collected for scoring purposes
@@ -315,11 +332,6 @@ export class GameController {
                 'success'
             );
 
-            // Show helpful farewell
-            setTimeout(() => {
-                this.showInformantDialogue(this.gameState.currentCity, 'farewell_helpful');
-            }, 2000);
-
             // Validate clue consistency after collection
             const validationResult = this.clueSystem.validateClueConsistency();
             if (!validationResult.isValid) {
@@ -335,11 +347,6 @@ export class GameController {
 
             // Provide helpful feedback for no clues found
             this.uiManager.showFeedbackMessage('No clues found in this city.', 'info');
-
-            // Show unhelpful farewell
-            setTimeout(() => {
-                this.showInformantDialogue(this.gameState.currentCity, 'farewell_unhelpful');
-            }, 2000);
         }
 
         // Check for investigation completion
@@ -354,7 +361,81 @@ export class GameController {
         this.updateProgressDisplay();
     }
 
-    // Present clues with automatic difficulty progression (hard → medium → easy)
+    // Present clues about the next city in the route
+    presentCluesAboutNextCity(currentCityId, nextCityId) {
+        const currentCityData = this.getCityData(currentCityId);
+        const nextCityData = this.getCityData(nextCityId);
+
+        if (!currentCityData || !nextCityData) {
+            return [];
+        }
+
+        // Get clues from the NEXT city's data (these are clues about where Nadine went)
+        let clues = [];
+
+        // Use automatic progression system (hard → medium → easy) for the NEXT city
+        clues = this.clueSystem.getCluesWithProgression(nextCityId, true);
+
+        if (clues.length > 0) {
+            const addedClues = [];
+            clues.forEach(clue => {
+                // Modify the clue to indicate it's about the next city
+                clue.aboutCity = nextCityId;
+                clue.aboutCityName = nextCityData.name;
+                clue.sourceCity = currentCityId;
+                clue.sourceCityName = currentCityData.name;
+
+                // Transform the clue text to be from the informant's perspective
+                clue.text = this.transformClueToInformantPerspective(clue.text, currentCityData.informant.name);
+
+                if (this.clueSystem.addClueToCollection(clue)) {
+                    addedClues.push(clue);
+                }
+            });
+
+            if (addedClues.length > 0) {
+                // Show clues in dialogue format
+                this.displayCluesInDialogue(addedClues, currentCityData.informant.name);
+
+                // Also add to evidence list
+                this.uiManager.showCluesCollected(addedClues);
+            }
+
+            return addedClues;
+        } else {
+            return [];
+        }
+    }
+
+    // Display clues in dialogue format
+    displayCluesInDialogue(clues, informantName) {
+        let clueText = "I have some information about where she went next:\n\n";
+
+        clues.forEach((clue, index) => {
+            clueText += `${index + 1}. ${clue.text}\n`;
+        });
+
+        // Show the clues as dialogue
+        this.uiManager.displayInformantDialogue(clueText, informantName, 'clue_presentation');
+    }
+
+    // Transform clue text to be from the informant's perspective
+    transformClueToInformantPerspective(clueText, informantName) {
+        // Transform clues to be from the informant's observation
+        const transformations = [
+            `I saw her ${clueText.toLowerCase()}`,
+            `She mentioned ${clueText.toLowerCase()}`,
+            `I noticed she ${clueText.toLowerCase()}`,
+            `She was interested in ${clueText.toLowerCase()}`,
+            `I observed her ${clueText.toLowerCase()}`
+        ];
+        
+        // Pick a random transformation
+        const randomIndex = Math.floor(Math.random() * transformations.length);
+        return transformations[randomIndex];
+    }
+
+    // Present clues with automatic difficulty progression (hard → medium → easy) - kept for compatibility
     presentCluesWithDifficulty(cityId, requestedDifficulty = null) {
         const cityData = this.getCityData(cityId);
         
@@ -389,17 +470,6 @@ export class GameController {
             
             if (addedClues.length > 0) {
                 this.uiManager.showCluesCollected(addedClues);
-
-                // Show progression feedback
-                const nextDifficulty = this.clueSystem.getNextClueDifficulty(cityId);
-                if (nextDifficulty !== clues[0].difficulty) {
-                    setTimeout(() => {
-                        this.uiManager.showFeedbackMessage(
-                            `Next clue will be ${nextDifficulty} difficulty`,
-                            'info'
-                        );
-                    }, 2000);
-                }
             }
             
             return addedClues;
@@ -410,6 +480,24 @@ export class GameController {
 
     // Show travel screen
     showTravelScreen() {
+        // Show farewell dialogue before traveling
+        const cityData = this.getCityData(this.gameState.currentCity);
+        const hasClues = this.hasCityClues(this.gameState.currentCity);
+        const cityCluesCollected = this.gameState.collectedClues.filter(
+            clue => clue.sourceCity === this.gameState.currentCity
+        );
+
+        // Show appropriate farewell based on whether clues were collected
+        if (cityCluesCollected.length > 0) {
+            this.showInformantDialogue(this.gameState.currentCity, 'farewell_helpful');
+        } else if (hasClues) {
+            // City has clues but player didn't collect them
+            this.showInformantDialogue(this.gameState.currentCity, 'farewell_unhelpful');
+        } else {
+            // City has no clues (Nadine wasn't here)
+            this.showInformantDialogue(this.gameState.currentCity, 'farewell_unhelpful');
+        }
+
         this.gameState.phase = 'travel';
         this.gameState.saveGameState();
         this.uiManager.showScreen('travel-screen');
@@ -533,6 +621,9 @@ export class GameController {
                 this.gameState.phase = 'investigation';
                 this.uiManager.showScreen('investigation-screen');
                 this.uiManager.updateInvestigationScreen(cityId);
+
+                // Show greeting dialogue when entering a new city
+                this.showInformantDialogue(cityId, 'greeting');
             }
         });
 

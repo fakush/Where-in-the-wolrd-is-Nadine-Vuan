@@ -317,25 +317,59 @@ export class UIManager {
             excludeCurrent: true 
         });
         
+        // Debug: Log available cities
+        console.log('Available cities for travel:', availableCities.map(c => `${c.id} (${c.name})`));
+
         if (availableCities.length === 0) {
             this.elements.cityMarkers.innerHTML = '<p class="no-cities-message">🚫 No more cities available to visit.</p>';
             return;
         }
 
-        // Add city selection buttons
-        availableCities.forEach((city) => {
-            const cityButton = document.createElement('button');
-            cityButton.textContent = `${city.name}, ${city.country}`;
-            cityButton.className = 'city-marker-button';
+        // City positions on the world map (converted from pixel coordinates to percentages)
+        // Original map dimensions assumed to be approximately 2800x1400 pixels based on coordinates
+        const cityPositions = {
+            'tokyo': { left: '83.8%', top: '50.4%' },        // (2347,706)
+            'roma': { left: '50.5%', top: '46.4%' },         // (1415,650)
+            'marruecos': { left: '44.5%', top: '54.4%' },    // (1245,762) - Marrakech
+            'london': { left: '46.4%', top: '39.6%' },       // (1298,555)
+            'reykjavik': { left: '41.7%', top: '28.6%' },    // (1167,400)
+            'mexico': { left: '20.7%', top: '60.6%' },       // (579,848)
+            'sydney': { left: '86.8%', top: '90.6%' },       // (2431,1268)
+            'estambul': { left: '56.6%', top: '52.1%' },     // (1585,729)
+            'bangkok': { left: '73.7%', top: '63.5%' },      // (2063,889)
+            'newYork': { left: '27.3%', top: '47.3%' },      // (764,662)
+            'buenosAires': { left: '31.5%', top: '90.7%' }   // (883,1270)
+        };
 
-            // Highlight final destination if this is Buenos Aires
-            if (city.is_final) {
-                cityButton.classList.add('final-destination-marker');
-                cityButton.innerHTML = `
-                    <i class="fas fa-star"></i> ${city.name}, ${city.country}
-                    <span class="final-destination-label">Final Destination</span>
-                `;
+        // Add city selection buttons with proper positioning
+        availableCities.forEach((city, index) => {
+            const cityButton = document.createElement('button');
+            cityButton.className = 'city-marker-button';
+            cityButton.setAttribute('data-city-id', city.id);
+
+            // Position the button on the map
+            const position = cityPositions[city.id];
+            if (position) {
+                cityButton.style.position = 'absolute';
+                cityButton.style.left = position.left;
+                cityButton.style.top = position.top;
+                cityButton.style.transform = 'translate(-50%, -50%)';
+            } else {
+                console.warn(`No position found for city: ${city.id} (${city.name})`);
+                // Fallback positioning - place in a grid if no position found
+                cityButton.style.position = 'relative';
+                cityButton.style.display = 'inline-block';
+                cityButton.style.margin = '5px';
             }
+
+            // All cities look the same - don't spoil Buenos Aires as final destination
+            cityButton.innerHTML = `
+                <i class="fas fa-map-marker-alt"></i> ${city.name}
+            `;
+
+            // Add entrance animation with delay
+            cityButton.style.animationDelay = `${index * 0.1}s`;
+            cityButton.classList.add('city-marker-entrance');
 
             cityButton.addEventListener('click', () => {
                 this.gameController.processPlayerAction('select-destination', { cityId: city.id });
@@ -343,6 +377,38 @@ export class UIManager {
             
             this.elements.cityMarkers.appendChild(cityButton);
         });
+
+        // Add map interaction hints
+        this.addMapInteractionHints();
+    }
+
+    // Add interactive hints to the world map
+    addMapInteractionHints() {
+        if (!this.elements.cityMarkers) return;
+
+        // Add a hint overlay
+        const hintOverlay = document.createElement('div');
+        hintOverlay.className = 'map-interaction-hint';
+        hintOverlay.innerHTML = `
+            <div class="hint-content">
+                <i class="fas fa-hand-pointer"></i>
+                <span>Click on a city to travel there</span>
+            </div>
+        `;
+
+        this.elements.cityMarkers.appendChild(hintOverlay);
+
+        // Remove hint after a few seconds
+        setTimeout(() => {
+            if (hintOverlay.parentNode) {
+                hintOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    if (hintOverlay.parentNode) {
+                        hintOverlay.parentNode.removeChild(hintOverlay);
+                    }
+                }, 500);
+            }
+        }, 3000);
     }
 
     // Show world map with Buenos Aires highlighted as final destination
@@ -843,13 +909,7 @@ export class UIManager {
         // Type out the dialogue text
         this.typeDialogue(textElement, dialogueText, 50);
 
-        // Add dialogue type indicator
-        setTimeout(() => {
-            const typeIndicator = document.createElement('span');
-            typeIndicator.className = `dialogue-type-indicator type-${dialogueType}`;
-            typeIndicator.textContent = this.getDialogueTypeLabel(dialogueType);
-            dialogueContent.appendChild(typeIndicator);
-        }, (dialogueText.length * 50) + 500);
+        // No dialogue type indicator needed
     }
 
     // Type out dialogue text with animation
@@ -877,16 +937,5 @@ export class UIManager {
         }, speed);
     }
 
-    // Get dialogue type label for UI display
-    getDialogueTypeLabel(dialogueType) {
-        const labels = {
-            'greeting': '👋 Greeting',
-            'clue_presentation': '🔍 Clue Information',
-            'farewell_helpful': '✅ Helpful Farewell',
-            'farewell_unhelpful': '❌ Unhelpful Farewell',
-            'not_here': '🚫 Not Here'
-        };
 
-        return labels[dialogueType] || '💬 Dialogue';
-    }
 }
