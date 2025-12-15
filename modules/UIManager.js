@@ -200,7 +200,7 @@ export class UIManager {
         if (!this.assetLoader) return;
 
         const criticalAssets = [
-            { path: 'assets/scenes/portada_juego.png', type: 'cover' },
+            { path: 'assets/scenes/nadine_cover.png', type: 'cover' },
             { path: 'assets/scenes/steve.png', type: 'character' },
             { path: 'assets/scenes/world_map.png', type: 'map' }
         ];

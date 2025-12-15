@@ -304,7 +304,7 @@ export class ErrorHandler {
         const fallbackAssets = {
             'scene': 'assets/scenes/world_map.png',
             'character': 'assets/scenes/steve.png',
-            'cover': 'assets/scenes/portada_juego.png',
+            'cover': 'assets/scenes/nadine_cover.png',
             'map': 'assets/scenes/world_map.png'
         };
 
