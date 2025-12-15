@@ -661,8 +661,9 @@ export class UIManager {
 
     // Show clues collected
     showCluesCollected(clues) {
-        const message = `${clues.length} clue${clues.length > 1 ? 's' : ''} collected!`;
-        this.showFeedbackMessage(message, 'success');
+        // Commented out distractive popup message
+        // const message = `${clues.length} clue${clues.length > 1 ? 's' : ''} collected!`;
+        // this.showFeedbackMessage(message, 'success');
     }
 
     // Show "not here" state with enhanced asset loading
@@ -756,6 +757,14 @@ export class UIManager {
         }
     }
 
+    // Reset travel button to normal state
+    resetTravelButton() {
+        if (this.elements.travelBtn) {
+            this.elements.travelBtn.disabled = false;
+            this.elements.travelBtn.innerHTML = '<i class="fas fa-plane"></i> Travel';
+        }
+    }
+
     // Animate travel (simplified)
     animateTravel(fromCity, toCity, callback) {
         // Simple animation - just call callback after short delay
@@ -799,6 +808,9 @@ export class UIManager {
             this.elements.collectCluesBtn.disabled = false;
             this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-search"></i> Collect Clues';
         }
+
+        // Reset travel button
+        this.resetTravelButton();
 
         // Clear loading indicators
         this.loadingIndicators.forEach(indicator => {

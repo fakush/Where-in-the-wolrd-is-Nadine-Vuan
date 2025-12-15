@@ -17,7 +17,8 @@ export class InformantSystem {
             'clue_presentation': 'helpful',
             'farewell_helpful': 'helpful_end',
             'farewell_unhelpful': 'unhelpful_end',
-            'not_here': 'unhelpful'
+            'not_here': 'unhelpful',
+            'no_more_info': 'no_more_info'
         };
     }
 
@@ -57,6 +58,9 @@ export class InformantSystem {
                 break;
             case 'clue_presentation':
                 dialogue = this.generateCluePresentation(informant, cityData);
+                break;
+            case 'no_more_info':
+                dialogue = this.generateNoMoreInfoResponse(informant, cityData);
                 break;
             default:
                 console.warn(`Unknown dialogue type: ${dialogueType}`);
@@ -205,6 +209,11 @@ export class InformantSystem {
         return regionHints[country] || ["Keep searching in other international destinations."];
     }
 
+    // Generate "no more information" response
+    generateNoMoreInfoResponse(informant, cityData) {
+        return "I have no more information.";
+    }
+
     // Add clue presentation logic with difficulty selection
     generateCluePresentation(informant, cityData) {
         const baseGreeting = informant.greeting || 'Hello, traveler.';
@@ -257,10 +266,9 @@ export class InformantSystem {
         
         // Check if this is the final destination
         if (cityData.is_final) {
-            return { 
-                isComplete: true, 
+            return {
+                isComplete: true,
                 reason: 'final_destination',
-                message: 'You have reached the final destination!',
                 dialogueType: 'final_encounter'
             };
         }
@@ -271,7 +279,6 @@ export class InformantSystem {
             return {
                 isComplete: true,
                 reason: 'interaction_complete',
-                message: `Investigation complete in ${cityData.name}.`,
                 dialogueType: dialogueState.lastDialogueType
             };
         }
@@ -282,10 +289,9 @@ export class InformantSystem {
         );
         
         if (cityCluesCollected.length > 0) {
-            return { 
-                isComplete: true, 
+            return {
+                isComplete: true,
                 reason: 'clues_collected',
-                message: `Investigation complete in ${cityData.name}. ${cityCluesCollected.length} clue(s) collected.`,
                 cluesFound: cityCluesCollected.length,
                 dialogueType: 'farewell_helpful'
             };
@@ -293,18 +299,16 @@ export class InformantSystem {
         
         // Check if city has no clues (Nadine wasn't here)
         if (!this.hasCityClues(cityId)) {
-            return { 
-                isComplete: true, 
+            return {
+                isComplete: true,
                 reason: 'no_clues_available',
-                message: `Investigation complete in ${cityData.name}. Nadine was not here.`,
                 dialogueType: 'farewell_unhelpful'
             };
         }
         
-        return { 
-            isComplete: false, 
+        return {
+            isComplete: false,
             reason: 'investigation_ongoing',
-            message: 'Investigation still in progress...',
             dialogueType: 'greeting'
         };
     }
@@ -335,9 +339,6 @@ export class InformantSystem {
 
     // Display dialogue with enhanced formatting and UI integration
     displayDialogue(dialogue, informantName, dialogueType, cityData = null) {
-        // This method would integrate with the UI system
-        // For now, we'll log the dialogue and prepare data for UI display
-        
         const dialogueData = {
             text: dialogue,
             informantName: informantName,
@@ -346,9 +347,7 @@ export class InformantSystem {
             timestamp: new Date(),
             formatting: this.getDialogueFormatting(dialogueType)
         };
-        
-        console.log(`[${informantName}]: ${dialogue}`);
-        
+
         // Return formatted dialogue data for UI integration
         return dialogueData;
     }
@@ -380,6 +379,11 @@ export class InformantSystem {
                 icon: '🚫', 
                 style: 'not-here',
                 priority: 'low'
+            },
+            'no_more_info': {
+                icon: '🤷',
+                style: 'no-more-info',
+                priority: 'normal'
             }
         };
         
@@ -460,7 +464,6 @@ export class InformantSystem {
     // Reset dialogue state for new game session
     resetDialogueState() {
         this.dialogueState.clear();
-        console.log('Dialogue state reset for new game session');
     }
 
     // Validate informant data integrity

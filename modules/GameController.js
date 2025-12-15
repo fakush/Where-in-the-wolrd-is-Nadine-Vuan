@@ -298,13 +298,25 @@ export class GameController {
             return;
         }
 
+        // Check if we're in "no more info" state first
+        const nextDifficulty = this.clueSystem.getNextClueDifficulty(this.gameState.currentCity);
+        if (nextDifficulty === 'no_more_info') {
+            // Show "no more information" message with farewell_helpful
+            const noMoreInfoMessage = "I have no more information.";
+            this.uiManager.displayInformantDialogue(noMoreInfoMessage, currentCityData.informant.name, 'no_more_info');
+
+            // Show farewell_helpful message
+            this.showInformantDialogue(this.gameState.currentCity, 'farewell_helpful');
+            return;
+        }
+
         // Check if current city has clues about the next city
         const hasClues = this.hasCityClues(this.gameState.currentCity);
 
         if (!hasClues) {
             // Show "not here" response - Nadine wasn't in this city
             this.showInformantDialogue(this.gameState.currentCity, 'not_here');
-            this.uiManager.showFeedbackMessage('No clues found in this city.', 'info');
+            // this.uiManager.showFeedbackMessage('No clues found in this city.', 'info');
             return;
         }
 
@@ -327,10 +339,10 @@ export class GameController {
 
             // Provide positive feedback for successful clue collection with point information
             const totalPoints = collectedClues.reduce((sum, clue) => sum + (clue.pointValue || 1), 0);
-            this.uiManager.showFeedbackMessage(
-                `Clues collected successfully! +${totalPoints} points`,
-                'success'
-            );
+            // this.uiManager.showFeedbackMessage(
+            //     `Clues collected successfully! +${totalPoints} points`,
+            //     'success'
+            // );
 
             // Validate clue consistency after collection
             const validationResult = this.clueSystem.validateClueConsistency();
@@ -346,15 +358,16 @@ export class GameController {
             this.showInformantDialogue(this.gameState.currentCity, 'not_here');
 
             // Provide helpful feedback for no clues found
-            this.uiManager.showFeedbackMessage('No clues found in this city.', 'info');
+            // this.uiManager.showFeedbackMessage('No clues found in this city.', 'info');
         }
 
         // Check for investigation completion
         const completionStatus = this.detectInvestigationCompletion();
         if (completionStatus.isComplete) {
-            setTimeout(() => {
-                this.uiManager.showFeedbackMessage(completionStatus.message, 'info');
-            }, 3000);
+            // Commented out distractive popup dialog
+            // setTimeout(() => {
+            //     this.uiManager.showFeedbackMessage(completionStatus.message, 'info');
+            // }, 3000);
         }
         
         // Update progress display
@@ -373,8 +386,8 @@ export class GameController {
         // Get clues from the NEXT city's data (these are clues about where Nadine went)
         let clues = [];
 
-        // Use automatic progression system (hard → medium → easy) for the NEXT city
-        clues = this.clueSystem.getCluesWithProgression(nextCityId, true);
+        // Get clues from next city's data but track progression for current city
+        clues = this.clueSystem.getCluesWithProgressionFromCity(nextCityData, currentCityId, true);
 
         if (clues.length > 0) {
             const addedClues = [];
@@ -412,7 +425,7 @@ export class GameController {
         let clueText = "I have some information about where she went next:\n\n";
 
         clues.forEach((clue, index) => {
-            clueText += `${index + 1}. ${clue.text}\n`;
+            clueText += `${clue.text}\n`;
         });
 
         // Show the clues as dialogue
@@ -502,6 +515,8 @@ export class GameController {
         this.gameState.saveGameState();
         this.uiManager.showScreen('travel-screen');
         this.uiManager.showWorldMap();
+        // Ensure travel button is in correct state
+        this.uiManager.resetTravelButton();
     }
 
     // Travel to selected city with guess validation and scoring
@@ -603,11 +618,11 @@ export class GameController {
             feedbackMessage += ` | ${journeyStatus.message}`;
         }
 
-        this.uiManager.showFeedbackMessage(
-            feedbackMessage,
-            'success',
-            { icon: 'fas fa-check-circle', duration: 3000 }
-        );
+        // this.uiManager.showFeedbackMessage(
+        //     feedbackMessage,
+        //     'success',
+        //     { icon: 'fas fa-check-circle', duration: 3000 }
+        // );
         
         // Show travel animation and transition
         this.uiManager.animateTravel(previousCity, cityId, () => {
@@ -672,11 +687,11 @@ export class GameController {
     // Present Buenos Aires as the final destination after 4 cities
     presentFinalDestination() {
         // Show special message about reaching the final stage
-        this.uiManager.showFeedbackMessage(
-            '🎯 Final Stage: Buenos Aires is your last destination! Nadine awaits...',
-            'info',
-            { icon: 'fas fa-flag-checkered', duration: 5000 }
-        );
+        // this.uiManager.showFeedbackMessage(
+        //     '🎯 Final Stage: Buenos Aires is your last destination! Nadine awaits...',
+        //     'info',
+        //     { icon: 'fas fa-flag-checkered', duration: 5000 }
+        // );
 
         // Transition to travel screen with Buenos Aires highlighted
         setTimeout(() => {
@@ -700,11 +715,11 @@ export class GameController {
         this.displayNotHereScene(cityData);
 
         // Provide feedback about incorrect guess
-        this.uiManager.showFeedbackMessage(
-            `Nadine wasn't in ${cityData.name}. ${this.gameState.gameStats.attemptsRemaining} attempts remaining.`,
-            'warning',
-            { icon: 'fas fa-exclamation-triangle', duration: 4000 }
-        );
+        // this.uiManager.showFeedbackMessage(
+        //     `Nadine wasn't in ${cityData.name}. ${this.gameState.gameStats.attemptsRemaining} attempts remaining.`,
+        //     'warning',
+        //     { icon: 'fas fa-exclamation-triangle', duration: 4000 }
+        // );
 
         // Check for failure conditions after reducing attempts
         const failureCheck = this.failureHandler.checkFailureConditions();
@@ -718,6 +733,8 @@ export class GameController {
             this.gameState.phase = 'travel';
             this.uiManager.showScreen('travel-screen');
             this.uiManager.showWorldMap();
+            // Reset travel button state
+            this.uiManager.resetTravelButton();
         }, 3000);
         
         this.gameState.saveGameState();
@@ -873,7 +890,8 @@ export class GameController {
                 'New investigation started! Good luck, detective!' :
                 'Fresh investigation started with clean slate! Good luck, detective!';
                 
-            this.uiManager.showFeedbackMessage(sessionMessage, 'info');
+            // Commented out distractive session message
+            // this.uiManager.showFeedbackMessage(sessionMessage, 'info');
 
             // Log session restart for debugging
             console.log('New game session started:', this.gameState.sessionId, isolationResults);

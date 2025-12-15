@@ -1721,7 +1721,7 @@ men Sandiego Special Elements */
     position: relative;
 }
 
-.evidence-tape::before {
+/* .evidence-tape::before {
     content: '';
     position: absolute;
     top: -10px;
@@ -1738,6 +1738,8 @@ men Sandiego Special Elements */
     opacity: 0.8;
     z-index: 1;
 }
+
+*/
 
 .case-file {
     background: linear-gradient(135deg, 

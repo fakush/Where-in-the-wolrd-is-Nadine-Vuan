@@ -20,7 +20,7 @@ export class ClueSystem {
     }
 
     // Generate clues for a city with fair difficulty tier randomization
-    generateClues(cityData, options = {}) {
+    generateClues(cityData, options = {}, sourceCityId = null) {
         if (!cityData || !cityData.clues) {
             console.warn('Invalid city data provided for clue generation');
             return [];
@@ -42,15 +42,15 @@ export class ClueSystem {
 
         // Use RandomizationSystem for fair clue selection if available
         if (this.randomizationSystem && randomizeSelection) {
-            return this.generateFairRandomizedClues(cityData, options);
+            return this.generateFairRandomizedClues(cityData, options, sourceCityId);
         }
 
         // Fallback to original randomization method
-        return this.generateLegacyRandomizedClues(cityData, options);
+        return this.generateLegacyRandomizedClues(cityData, options, sourceCityId);
     }
 
     // Generate clues using fair randomization system
-    generateFairRandomizedClues(cityData, options) {
+    generateFairRandomizedClues(cityData, options, sourceCityId = null) {
         const {
             maxCluesPerDifficulty = 1,
             includeAllDifficulties = true,
@@ -67,16 +67,18 @@ export class ClueSystem {
 
         // Convert randomized clue data to clue objects
         const clues = randomizedClueData.map((clueData, index) => {
+            const effectiveSourceCity = sourceCityId || this.gameState.currentCity;
             const clueObject = {
                 text: clueData.text,
                 difficulty: clueData.difficulty,
-                sourceCity: this.gameState.currentCity,
+                sourceCity: effectiveSourceCity,
                 timestamp: new Date(),
-                id: `${this.gameState.currentCity}_${clueData.difficulty}_${Date.now()}_${index}`,
+                id: `${effectiveSourceCity}_${clueData.difficulty}_${Date.now()}_${Math.random()}_${index}`,
                 selectionMetadata: {
                     selectionIndex: clueData.selectionIndex,
                     totalAvailable: clueData.totalAvailable,
-                    fairnessApplied: true
+                    fairnessApplied: true,
+                    randomSeed: Math.random() // Add randomness to ensure uniqueness
                 }
             };
 
@@ -94,7 +96,7 @@ export class ClueSystem {
     }
 
     // Legacy randomization method for backward compatibility
-    generateLegacyRandomizedClues(cityData, options) {
+    generateLegacyRandomizedClues(cityData, options, sourceCityId = null) {
         const clues = [];
         const { 
             maxCluesPerDifficulty = 1, 
@@ -132,14 +134,16 @@ export class ClueSystem {
                     selectedClue = availableClues[i];
                 }
                 
+                const effectiveSourceCity = sourceCityId || this.gameState.currentCity;
                 const clueObject = {
                     text: selectedClue,
                     difficulty: difficulty,
-                    sourceCity: this.gameState.currentCity,
+                    sourceCity: effectiveSourceCity,
                     timestamp: new Date(),
-                    id: `${this.gameState.currentCity}_${difficulty}_${Date.now()}_${i}`,
+                    id: `${effectiveSourceCity}_${difficulty}_${Date.now()}_${Math.random()}_${i}`,
                     selectionMetadata: {
-                        fairnessApplied: false
+                        fairnessApplied: false,
+                        randomSeed: Math.random() // Add randomness to ensure uniqueness
                     }
                 };
                 
@@ -168,12 +172,13 @@ export class ClueSystem {
             return false;
         }
         
-        // Check for duplicate clues
-        const isDuplicate = this.gameState.collectedClues.some(existingClue => 
-            existingClue.text === clue.text && 
-            existingClue.sourceCity === clue.sourceCity
+        // Check for duplicate clues - but allow different random selections from same difficulty
+        const isDuplicate = this.gameState.collectedClues.some(existingClue =>
+            existingClue.text === clue.text &&
+            existingClue.sourceCity === clue.sourceCity &&
+            existingClue.difficulty === clue.difficulty
         );
-        
+
         if (isDuplicate) {
             console.warn('Duplicate clue detected, not adding:', clue.text);
             return false;
@@ -195,7 +200,7 @@ export class ClueSystem {
         return true;
     }
 
-    // Implement clue progression logic (hard → medium → easy) for next destination
+    // Implement clue progression logic (difficult → medium → easy) for next destination
     getNextClueDifficulty(cityId) {
         const currentProgression = this.clueProgression.get(cityId);
 
@@ -204,14 +209,14 @@ export class ClueSystem {
             return 'difficult';
         }
 
-        // Progress through difficulties: difficult → medium → easy
+        // Progress through difficulties: difficult → medium → easy (one click per difficulty)
         switch (currentProgression.lastDifficulty) {
             case 'difficult':
                 return 'medium';
             case 'medium':
                 return 'easy';
             case 'easy':
-                return 'easy'; // Stay at easy if player requests more clues
+                return 'no_more_info'; // No more clues after easy
             default:
                 return 'difficult';
         }
@@ -252,6 +257,11 @@ export class ClueSystem {
             targetDifficulty = progression?.lastDifficulty || 'difficult';
         }
 
+        // Handle "no more info" case
+        if (targetDifficulty === 'no_more_info') {
+            return []; // Return empty array to indicate no more clues
+        }
+
         const clueOptions = {
             maxCluesPerDifficulty: 1,
             randomizeSelection: true,
@@ -260,6 +270,37 @@ export class ClueSystem {
         };
 
         return this.generateClues(cityData, clueOptions);
+    }
+
+    // Get clues from one city's data but track progression for another city
+    getCluesWithProgressionFromCity(sourceCityData, progressionCityId, forceProgression = true) {
+        if (!sourceCityData) {
+            console.warn(`Source city data not provided`);
+            return [];
+        }
+
+        let targetDifficulty;
+        if (forceProgression) {
+            targetDifficulty = this.getNextClueDifficulty(progressionCityId);
+        } else {
+            // Use current difficulty or start with difficult
+            const progression = this.clueProgression.get(progressionCityId);
+            targetDifficulty = progression?.lastDifficulty || 'difficult';
+        }
+
+        // Handle "no more info" case
+        if (targetDifficulty === 'no_more_info') {
+            return []; // Return empty array to indicate no more clues
+        }
+
+        const clueOptions = {
+            maxCluesPerDifficulty: 1,
+            randomizeSelection: true,
+            includeAllDifficulties: false,
+            specificDifficulty: targetDifficulty
+        };
+
+        return this.generateClues(sourceCityData, clueOptions, progressionCityId);
     }
 
     // Helper method to get city data from game state
