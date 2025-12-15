@@ -302,10 +302,10 @@ export class ErrorHandler {
     // Get fallback asset for failed loads
     getFallbackAsset(assetType, originalPath) {
         const fallbackAssets = {
-            'scene': '../assets/scenes/world_map.png',
-            'character': '../assets/scenes/steve.png',
-            'cover': '../assets/scenes/portada_juego.png',
-            'map': '../assets/scenes/world_map.png'
+            'scene': 'assets/scenes/world_map.png',
+            'character': 'assets/scenes/steve.png',
+            'cover': 'assets/scenes/portada_juego.png',
+            'map': 'assets/scenes/world_map.png'
         };
 
         // Determine asset type from path if not specified

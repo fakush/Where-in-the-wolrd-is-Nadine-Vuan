@@ -117,14 +117,14 @@ export class GameController {
             let rawData;
 
             if (this.uiManager && this.uiManager.assetLoader) {
-                rawData = await this.uiManager.assetLoader.loadGameData('../assets/data/game_data.json', {
+                rawData = await this.uiManager.assetLoader.loadGameData('assets/data/game_data.json', {
                     timeout: 15000,
                     retryOnFailure: true,
                     showLoadingState: true
                 });
             } else {
             // Fallback to direct fetch
-                const response = await fetch('../assets/data/game_data.json');
+                const response = await fetch('assets/data/game_data.json');
                 if (!response.ok) {
                     throw new Error(`Failed to load game data: HTTP ${response.status} - ${response.statusText}`);
                 }
@@ -743,7 +743,7 @@ export class GameController {
     // Display "not here" scene for incorrect guesses
     displayNotHereScene(cityData) {
         // Show the "not here" scene image
-        const notHereImagePath = `../assets/scenes/${cityData.id}_notHere.png`;
+        const notHereImagePath = `assets/scenes/${cityData.id}_notHere.png`;
         this.uiManager.showNotHereScene(cityData, notHereImagePath);
 
         // Display informant's "not here" response

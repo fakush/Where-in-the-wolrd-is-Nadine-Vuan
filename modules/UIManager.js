@@ -200,9 +200,9 @@ export class UIManager {
         if (!this.assetLoader) return;
 
         const criticalAssets = [
-            { path: '../assets/scenes/portada_juego.png', type: 'cover' },
-            { path: '../assets/scenes/steve.png', type: 'character' },
-            { path: '../assets/scenes/world_map.png', type: 'map' }
+            { path: 'assets/scenes/portada_juego.png', type: 'cover' },
+            { path: 'assets/scenes/steve.png', type: 'character' },
+            { path: 'assets/scenes/world_map.png', type: 'map' }
         ];
 
         try {
@@ -256,7 +256,7 @@ export class UIManager {
         
         // Update scene image with enhanced error handling
         if (this.elements.cityScene && this.assetLoader) {
-            const imagePath = `../assets/scenes/${cityId}_${sceneType}.png`;
+            const imagePath = `assets/scenes/${cityId}_${sceneType}.png`;
 
             try {
                 // Show loading state
@@ -284,12 +284,12 @@ export class UIManager {
             }
         } else if (this.elements.cityScene) {
         // Fallback to original method if AssetLoader not available
-            this.elements.cityScene.src = `../assets/scenes/${cityId}_${sceneType}.png`;
+            this.elements.cityScene.src = `assets/scenes/${cityId}_${sceneType}.png`;
             this.elements.cityScene.alt = `${cityData.name} Scene`;
 
             this.elements.cityScene.onerror = () => {
                 console.warn(`Failed to load scene image: ${cityId}_${sceneType}.png`);
-                this.elements.cityScene.src = '../assets/scenes/world_map.png';
+                this.elements.cityScene.src = 'assets/scenes/world_map.png';
             };
         }
 
@@ -668,7 +668,7 @@ export class UIManager {
     // Show "not here" state with enhanced asset loading
     async showNotHereState(cityData) {
         if (this.elements.cityScene && cityData && this.assetLoader) {
-            const imagePath = `../assets/scenes/${cityData.id}_notHere.png`;
+            const imagePath = `assets/scenes/${cityData.id}_notHere.png`;
 
             try {
                 const image = await this.assetLoader.loadImage(imagePath, 'scene', {
@@ -688,10 +688,10 @@ export class UIManager {
             }
         } else if (this.elements.cityScene && cityData) {
     // Fallback to original method
-            this.elements.cityScene.src = `../assets/scenes/${cityData.id}_notHere.png`;
+            this.elements.cityScene.src = `assets/scenes/${cityData.id}_notHere.png`;
             this.elements.cityScene.onerror = () => {
                 console.warn(`Failed to load not here scene: ${cityData.id}_notHere.png`);
-                this.elements.cityScene.src = '../assets/scenes/world_map.png';
+                this.elements.cityScene.src = 'assets/scenes/world_map.png';
             };
         }
         
@@ -739,7 +739,7 @@ export class UIManager {
             this.elements.cityScene.alt = `${cityData.name} - Not Here Scene`;
             this.elements.cityScene.onerror = () => {
                 console.warn(`Failed to load not here scene: ${imagePath}`);
-                this.elements.cityScene.src = '../assets/scenes/world_map.png';
+                this.elements.cityScene.src = 'assets/scenes/world_map.png';
             };
         }
 

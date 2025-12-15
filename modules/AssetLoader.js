@@ -18,18 +18,18 @@ export class AssetLoader {
     initializeFallbackAssets() {
         return {
             // Scene images fallbacks
-            'scene': '../assets/scenes/world_map.png',
-            'character': '../assets/scenes/steve.png',
-            'cover': '../assets/scenes/portada_juego.png',
-            'map': '../assets/scenes/world_map.png',
+            'scene': 'assets/scenes/world_map.png',
+            'character': 'assets/scenes/steve.png',
+            'cover': 'assets/scenes/portada_juego.png',
+            'map': 'assets/scenes/world_map.png',
             
             // Specific fallback hierarchy
             'city_scene': [
-                '../assets/scenes/world_map.png',
+                'assets/scenes/world_map.png',
                 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNpdHkgU2NlbmU8L3RleHQ+PC9zdmc+'
             ],
             'character_portrait': [
-                '../assets/scenes/steve.png',
+                'assets/scenes/steve.png',
                 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjgwIiBmaWxsPSIjNjY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q2hhcmFjdGVyPC90ZXh0Pjwvc3ZnPg=='
             ]
         };
@@ -214,7 +214,7 @@ export class AssetLoader {
     }
 
     // Load game data with enhanced error handling and fallback
-    async loadGameData(dataPath = '../assets/data/game_data.json', options = {}) {
+    async loadGameData(dataPath = 'assets/data/game_data.json', options = {}) {
         const {
             timeout = 15000,
             retryOnFailure = true,

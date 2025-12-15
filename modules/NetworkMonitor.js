@@ -68,7 +68,7 @@ export class NetworkMonitor {
         };
 
         // Use a small, likely cached image for testing
-        testImage.src = '../assets/scenes/world_map.png?' + Date.now();
+        testImage.src = 'assets/scenes/world_map.png?' + Date.now();
         
         // Timeout after 5 seconds
         setTimeout(() => {
