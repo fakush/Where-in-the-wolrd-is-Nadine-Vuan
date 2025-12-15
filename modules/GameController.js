@@ -290,6 +290,13 @@ export class GameController {
             return;
         }
 
+        // Check if we're in Buenos Aires (final destination) FIRST
+        if (currentCityData.is_final) {
+            // In Buenos Aires, show the final encounter dialogs instead of regular clues
+            this.handleBuenosAiresFinalEncounter();
+            return;
+        }
+
         // Get the next city in the route - this is what the clues should be about
         const nextCityId = this.gameState.getNextCityInRoute();
 
@@ -328,7 +335,7 @@ export class GameController {
 
             // Update current clue difficulty level based on collected clues
             // Use the hardest difficulty collected for scoring purposes
-            const difficulties = ['easy', 'medium', 'hard'];
+            const difficulties = ['easy', 'medium', 'difficult'];
             const hardestDifficulty = collectedClues.reduce((hardest, clue) => {
                 const currentIndex = difficulties.indexOf(clue.difficulty);
                 const hardestIndex = difficulties.indexOf(hardest);
@@ -336,6 +343,9 @@ export class GameController {
             }, 'easy');
 
             this.gameState.currentClueLevel = hardestDifficulty;
+
+            // Debug logging for clue collection
+            console.log(`Clue collection: Set difficulty to ${hardestDifficulty} based on collected clues:`, collectedClues.map(c => c.difficulty));
 
             // Provide positive feedback for successful clue collection with point information
             const totalPoints = collectedClues.reduce((sum, clue) => sum + (clue.pointValue || 1), 0);
@@ -594,16 +604,16 @@ export class GameController {
             this.gameState.visitedCities.push(this.gameState.currentCity);
         }
         
+        // Award points based on current clue difficulty level BEFORE advancing
+        const pointsAwarded = this.awardPointsForCorrectGuess();
+
         // Move to new city
         const previousCity = this.gameState.currentCity;
         this.gameState.currentCity = cityId;
         this.gameState.gameStats.citiesVisited++;
         
-        // Advance to next city in route
+        // Advance to next city in route (this resets clue level for new city)
         this.gameState.advanceToNextCity();
-
-        // Award points based on current clue difficulty level
-        const pointsAwarded = this.awardPointsForCorrectGuess();
 
         // Check for journey completion after 4 cities (before Buenos Aires)
         const journeyStatus = this.checkJourneyCompletion();
@@ -628,7 +638,13 @@ export class GameController {
         this.uiManager.animateTravel(previousCity, cityId, () => {
             // Check if this is the final destination
             if (cityData.is_final) {
-                this.triggerFinalEncounter();
+                // For Buenos Aires, first show the investigation screen like a regular city
+                this.gameState.phase = 'investigation';
+                this.uiManager.showScreen('investigation-screen');
+                this.uiManager.updateInvestigationScreen(cityId);
+
+                // Show greeting dialogue when entering Buenos Aires
+                this.showInformantDialogue(cityId, 'greeting');
             } else if (journeyStatus.shouldPresentFinalDestination) {
                 // Present Buenos Aires as the final destination after 4 cities
                 this.presentFinalDestination();
@@ -746,13 +762,16 @@ export class GameController {
         const currentClueLevel = this.gameState.currentClueLevel || 'easy';
 
         const pointValues = {
-            'hard': 3,
+            'difficult': 3,
             'medium': 2,
             'easy': 1
         };
 
         const points = pointValues[currentClueLevel] || 1;
         this.gameState.gameStats.score += points;
+
+        // Debug logging for scoring
+        console.log(`Scoring: ${currentClueLevel} clue = ${points} points (Total: ${this.gameState.gameStats.score})`);
 
         return points;
     }
@@ -772,6 +791,80 @@ export class GameController {
             cityData.informant?.name || 'Local Informant',
             'not_here'
         );
+    }
+
+    // Handle Buenos Aires final encounter sequence
+    handleBuenosAiresFinalEncounter() {
+        const buenosAiresData = this.getCityData(this.gameState.currentCity);
+
+        if (!buenosAiresData || !buenosAiresData.final_encounter) {
+            console.error('Buenos Aires final encounter data not found');
+            return;
+        }
+
+        // Initialize final encounter state
+        this.gameState.finalEncounterStep = 0;
+        this.gameState.finalEncounterData = buenosAiresData.final_encounter;
+
+        // First, show the buenosAires_youFoundMe.png image
+        this.uiManager.showFinalEncounterImage('buenosAires_youFoundMe.png');
+
+        // Start the final encounter sequence
+        this.showNextFinalEncounterStep();
+    }
+
+    // Show the next step in the final encounter sequence
+    showNextFinalEncounterStep() {
+        const encounter = this.gameState.finalEncounterData;
+        const step = this.gameState.finalEncounterStep;
+
+        switch (step) {
+            case 0:
+                // Show Nadine's speech with proper timing
+                this.uiManager.displayFinalEncounterDialogue(
+                    encounter.nadine_speech,
+                    'Nadine Vuan',
+                    'final_encounter_nadine',
+                    'Continue',
+                    () => {
+                        this.gameState.finalEncounterStep++;
+                        this.showNextFinalEncounterStep();
+                    }
+                );
+                break;
+
+            case 1:
+                // Show Steve's response with proper timing
+                this.uiManager.displayFinalEncounterDialogue(
+                    encounter.steve_response,
+                    'Steve',
+                    'final_encounter_steve',
+                    'Continue',
+                    () => {
+                        this.gameState.finalEncounterStep++;
+                        this.showNextFinalEncounterStep();
+                    }
+                );
+                break;
+
+            case 2:
+                // Show victory message with proper timing
+                this.uiManager.displayFinalEncounterDialogue(
+                    encounter.victory_message,
+                    'Game Complete',
+                    'final_encounter_victory',
+                    'Finish',
+                    () => {
+                        this.triggerFinalEncounter();
+                    }
+                );
+                break;
+
+            default:
+                // Fallback - go directly to final screen
+                this.triggerFinalEncounter();
+                break;
+        }
     }
 
     // Trigger final encounter
@@ -839,7 +932,7 @@ export class GameController {
     getHighestScoringClue() {
         if (this.gameState.collectedClues.length === 0) return null;
 
-        const pointValues = { 'hard': 3, 'medium': 2, 'easy': 1 };
+        const pointValues = { 'difficult': 3, 'medium': 2, 'easy': 1 };
         return this.gameState.collectedClues.reduce((highest, clue) => {
             const cluePoints = pointValues[clue.difficulty] || 0;
             const highestPoints = pointValues[highest.difficulty] || 0;

@@ -11,7 +11,7 @@ export class GameState {
         this.currentCityIndex = 0; // Position in the route (0-4)
         this.visitedCities = [];
         this.collectedClues = [];
-        this.currentClueLevel = 'hard'; // Current clue difficulty level
+        this.currentClueLevel = 'difficult'; // Current clue difficulty level
         this.gameStats = {
             startTime: null,
             score: 0, // Points accumulated based on clue difficulty
@@ -38,7 +38,7 @@ export class GameState {
         this.currentCityIndex = 0;
         this.visitedCities = [];
         this.collectedClues = [];
-        this.currentClueLevel = 'hard';
+        this.currentClueLevel = 'difficult';
         this.gameStats = {
             startTime: new Date(),
             score: 0,
@@ -206,7 +206,7 @@ export class GameState {
         this.currentCityIndex = 0;
         this.visitedCities = [];
         this.collectedClues = [];
-        this.currentClueLevel = 'hard';
+        this.currentClueLevel = 'difficult';
         this.gameStats = {
             startTime: null,
             score: 0,
@@ -289,7 +289,7 @@ export class GameState {
                 this.currentCityIndex = state.currentCityIndex || 0;
                 this.visitedCities = state.visitedCities || [];
                 this.collectedClues = state.collectedClues || [];
-                this.currentClueLevel = state.currentClueLevel || 'hard';
+                this.currentClueLevel = state.currentClueLevel || 'difficult';
                 this.gameStats = state.gameStats || {
                     startTime: new Date(),
                     score: 0,
@@ -341,7 +341,7 @@ export class GameState {
         }
 
         // Validate currentClueLevel
-        if (state.currentClueLevel && !['easy', 'medium', 'hard'].includes(state.currentClueLevel)) {
+        if (state.currentClueLevel && !['easy', 'medium', 'difficult'].includes(state.currentClueLevel)) {
             return false;
         }
 
@@ -398,7 +398,7 @@ export class GameState {
             this.gameStats.citiesCompleted++;
 
             // Reset clue level for new city
-            this.currentClueLevel = 'hard';
+            this.currentClueLevel = 'difficult';
 
             return true;
         }
@@ -413,7 +413,7 @@ export class GameState {
     // Add points based on clue difficulty
     addScore(clueLevel) {
         const pointValues = {
-            'hard': 3,
+            'difficult': 3,
             'medium': 2,
             'easy': 1
         };
@@ -425,10 +425,10 @@ export class GameState {
         return points;
     }
 
-    // Progress clue difficulty level (hard → medium → easy)
+    // Progress clue difficulty level (difficult → medium → easy)
     progressClueLevel() {
         const progression = {
-            'hard': 'medium',
+            'difficult': 'medium',
             'medium': 'easy',
             'easy': 'easy' // Stay at easy
         };

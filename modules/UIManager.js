@@ -297,7 +297,12 @@ export class UIManager {
         if (this.elements.collectCluesBtn) {
             this.elements.collectCluesBtn.disabled = !hasClues;
             if (hasClues) {
-                this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-search"></i> Collect Clues';
+                // Special button text for Buenos Aires (final destination)
+                if (cityData.is_final) {
+                    this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-user-check"></i> Find Nadine';
+                } else {
+                    this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-search"></i> Collect Clues';
+                }
             } else {
                 this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-times"></i> No Clues Here';
             }
@@ -625,6 +630,46 @@ export class UIManager {
         }, 500);
     }
 
+    // Show final encounter image (buenosAires_youFoundMe.png)
+    async showFinalEncounterImage(imagePath) {
+        if (this.elements.cityScene && this.assetLoader) {
+            const fullImagePath = `assets/scenes/${imagePath}`;
+
+            try {
+                // Show loading state
+                this.elements.cityScene.style.opacity = '0.5';
+
+                // Load the final encounter image
+                const image = await this.assetLoader.loadImage(fullImagePath, 'scene', {
+                    timeout: 5000,
+                    showLoadingState: false,
+                    retryOnFailure: true,
+                    fallbackOnError: true
+                });
+
+                // Update the image element
+                this.elements.cityScene.src = image.src;
+                this.elements.cityScene.alt = 'Final Encounter - You Found Nadine!';
+                this.elements.cityScene.style.opacity = '1';
+
+            } catch (error) {
+                console.warn(`Failed to load final encounter image: ${imagePath}`, error);
+                // Use fallback placeholder
+                this.elements.cityScene.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMDA1NTAwIi8+PHRleHQgeD0iNTAlIiB5PSI0NSUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPllvdSBGb3VuZCBOYWRpbmUhPC90ZXh0Pjx0ZXh0IHg9IjUwJSIgeT0iNTUlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNjY2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5GaW5hbCBFbmNvdW50ZXI8L3RleHQ+PC9zdmc+';
+                this.elements.cityScene.alt = 'Final Encounter (Placeholder)';
+                this.elements.cityScene.style.opacity = '1';
+            }
+        } else if (this.elements.cityScene) {
+            // Fallback to original method
+            this.elements.cityScene.src = `assets/scenes/${imagePath}`;
+            this.elements.cityScene.alt = 'Final Encounter - You Found Nadine!';
+            this.elements.cityScene.onerror = () => {
+                console.warn(`Failed to load final encounter image: ${imagePath}`);
+                this.elements.cityScene.src = 'assets/scenes/world_map.png';
+            };
+        }
+    }
+
     // Update final encounter screen
     updateFinalEncounterScreen(encounter) {
         const encounterScreen = document.getElementById('final-encounter-screen');
@@ -941,12 +986,13 @@ export class UIManager {
     }
 
     // Type out dialogue text with animation
-    typeDialogue(element, text, speed = 50) {
+    typeDialogue(element, text, speed = 50, onComplete = null) {
         // Safety check for undefined text
         if (!text || typeof text !== 'string') {
             console.warn('typeDialogue called with invalid text:', text);
             element.textContent = 'No dialogue available.';
             element.classList.add('dialogue-complete');
+            if (onComplete) onComplete();
             return;
         }
 
@@ -961,8 +1007,62 @@ export class UIManager {
                 clearInterval(typeInterval);
                 // Add completion animation
                 element.classList.add('dialogue-complete');
+                // Call completion callback
+                if (onComplete) onComplete();
             }
         }, speed);
+    }
+
+    // Display final encounter dialogue with proper timing
+    displayFinalEncounterDialogue(dialogueText, informantName, dialogueType, buttonText, clickHandler) {
+        // First display the dialogue
+        this.displayInformantDialogue(dialogueText, informantName, dialogueType);
+
+        // Calculate typing duration based on text length (50ms per character + buffer)
+        const typingDuration = (dialogueText.length * 50) + 500;
+
+        // Show continue button after typing completes
+        setTimeout(() => {
+            this.showContinueButton(buttonText, clickHandler);
+        }, typingDuration);
+    }
+
+    // Show continue button for final encounter sequence
+    showContinueButton(buttonText, clickHandler) {
+        // Remove any existing continue button
+        const existingButton = document.getElementById('continue-button');
+        if (existingButton) {
+            existingButton.remove();
+        }
+
+        // Create continue button
+        const continueButton = document.createElement('button');
+        continueButton.id = 'continue-button';
+        continueButton.className = 'btn btn-primary continue-btn';
+        continueButton.innerHTML = `<i class="fas fa-arrow-right"></i> ${buttonText}`;
+
+        // Add click handler
+        continueButton.addEventListener('click', () => {
+            continueButton.remove(); // Remove button after click
+            clickHandler();
+        });
+
+        // Add button to the dialogue area or investigation screen
+        const dialogueElement = this.elements.dialogueText;
+        if (dialogueElement && dialogueElement.parentElement) {
+            dialogueElement.parentElement.appendChild(continueButton);
+        } else {
+            // Fallback - add to investigation screen
+            const investigationScreen = document.getElementById('investigation-screen');
+            if (investigationScreen) {
+                investigationScreen.appendChild(continueButton);
+            }
+        }
+
+        // Animate button appearance
+        setTimeout(() => {
+            continueButton.classList.add('fade-in');
+        }, 100);
     }
 
 
