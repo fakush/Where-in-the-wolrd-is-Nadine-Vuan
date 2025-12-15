@@ -92,7 +92,6 @@ export class InformantSystem {
     generateContextualGreeting(cityData) {
         const greetingVariations = [
             "Yes, I remember someone matching that description!",
-            "Ah, you're looking for that woman who was asking questions?",
             "I saw someone like that recently. Let me tell you what I observed...",
             "That person you're looking for - yes, she was here!",
             "I have information about the person you seek."

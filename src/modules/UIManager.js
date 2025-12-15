@@ -325,20 +325,20 @@ export class UIManager {
             return;
         }
 
-        // City positions on the world map (converted from pixel coordinates to percentages)
-        // Original map dimensions assumed to be approximately 2800x1400 pixels based on coordinates
+        // City positions on the world map (optimized for maximum clarity and no overlaps)
+        // Strategic positioning to use map space efficiently
         const cityPositions = {
-            'tokyo': { left: '83.8%', top: '50.4%' },        // (2347,706)
-            'roma': { left: '50.5%', top: '46.4%' },         // (1415,650)
-            'marruecos': { left: '44.5%', top: '54.4%' },    // (1245,762) - Marrakech
-            'london': { left: '46.4%', top: '39.6%' },       // (1298,555)
-            'reykjavik': { left: '41.7%', top: '28.6%' },    // (1167,400)
-            'mexico': { left: '20.7%', top: '60.6%' },       // (579,848)
-            'sydney': { left: '86.8%', top: '90.6%' },       // (2431,1268)
-            'estambul': { left: '56.6%', top: '52.1%' },     // (1585,729)
-            'bangkok': { left: '73.7%', top: '63.5%' },      // (2063,889)
-            'newYork': { left: '27.3%', top: '47.3%' },      // (764,662)
-            'buenosAires': { left: '31.5%', top: '90.7%' }   // (883,1270)
+            'tokyo': { left: '87%', top: '45%' },            // Far right, clear space
+            'roma': { left: '48%', top: '45%' },             // Central Europe, moved up
+            'marruecos': { left: '36%', top: '50%' },        // North Africa, clear space
+            'london': { left: '46%', top: '32%' },           // Northern Europe, well separated
+            'reykjavik': { left: '32%', top: '26%' },        // Far north, isolated
+            'mexico': { left: '12%', top: '56%' },           // Central America, moved left
+            'sydney': { left: '80%', top: '82%' },           // Far southeast, isolated
+            'estambul': { left: '56%', top: '45%' },         // Turkey, moved right and down
+            'bangkok': { left: '67%', top: '60%' },          // Southeast Asia, moved down
+            'newYork': { left: '26%', top: '42%' },          // East coast US, moved left
+            'buenosAires': { left: '31%', top: '82%' }       // South America, moved left
         };
 
         // Add city selection buttons with proper positioning
@@ -366,6 +366,22 @@ export class UIManager {
             cityButton.innerHTML = `
                 <i class="fas fa-map-marker-alt"></i> ${city.name}
             `;
+
+            // Adjust button width based on city name length
+            const nameLength = city.name.length;
+            if (nameLength > 12) {
+                // Long names like "Ciudad de México" (16 chars), "Buenos Aires" (12 chars)
+                cityButton.style.minWidth = '120px';
+                cityButton.style.maxWidth = '160px';
+            } else if (nameLength > 8) {
+                // Medium names like "Marrakech" (9 chars), "Reykjavik" (9 chars)
+                cityButton.style.minWidth = '90px';
+                cityButton.style.maxWidth = '150px';
+            } else {
+                // Short names like "Roma" (4 chars), "Tokyo" (5 chars)
+                cityButton.style.minWidth = '75px';
+                cityButton.style.maxWidth = '110px';
+            }
 
             // Add entrance animation with delay
             cityButton.style.animationDelay = `${index * 0.1}s`;

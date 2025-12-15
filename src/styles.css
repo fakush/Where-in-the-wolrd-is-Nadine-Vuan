@@ -4255,18 +4255,21 @@ img[src*="data:image/svg+xml"] {
     }
 }
 
-/* City marker button improvements - much smaller, compact design */
+/* City marker button improvements - compact but shows full names */
 .city-marker-button {
-    min-width: 60px;
-    max-width: 80px;
-    padding: 3px 6px;
-    font-size: 0.6rem;
+    min-width: 75px;
+    max-width: 115px;
+    padding: 4px 7px;
+    font-size: 0.65rem;
+    font-weight: 600;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
     z-index: 100;
-    border-radius: 8px;
-    line-height: 1.2;
+    border-radius: 10px;
+    line-height: 1.1;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
 }
 
 /* Removed extra styling to keep buttons compact */
@@ -4274,8 +4277,8 @@ img[src*="data:image/svg+xml"] {
 /* Responsive adjustments for city markers */
 @media (max-width: 768px) {
     .city-marker-button {
-        min-width: 50px;
-        max-width: 70px;
+        min-width: 60px;
+        max-width: 90px;
         font-size: 0.5rem;
         padding: 2px 4px;
     }
@@ -4288,8 +4291,8 @@ img[src*="data:image/svg+xml"] {
 
 @media (max-width: 480px) {
     .city-marker-button {
-        min-width: 40px;
-        max-width: 60px;
+        min-width: 50px;
+        max-width: 80px;
         font-size: 0.45rem;
         padding: 2px 3px;
     }
@@ -4298,4 +4301,21 @@ img[src*="data:image/svg+xml"] {
 .final-destination-label {
     font-size: 0.5rem;
 }
+}
+
+/* Enhanced city marker button interactions */
+.city-marker-button:hover {
+    transform: translate(-50%, -50%) scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    z-index: 200;
+}
+
+.city-marker-button:active {
+    transform: translate(-50%, -50%) scale(0.98);
+}
+
+/* Ensure buttons don't interfere with each other */
+.city-marker-button {
+    position: absolute;
+    transform-origin: center;
 }
