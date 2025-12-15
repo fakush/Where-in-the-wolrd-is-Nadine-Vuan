@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Loading Test</title>
+    <style>
+        .screen { display: none; padding: 20px; }
+        .screen.active { display: block; }
+        .loading { background: #333; color: #0f0; }
+        .intro { background: #006; color: white; }
+    </style>
+</head>
+<body>
+    <div id="loading-screen" class="screen loading active">
+        <h2>Loading...</h2>
+        <p>Analyzing evidence...</p>
+    </div>
+    
+    <div id="intro-screen" class="screen intro">
+        <h2>Game Ready!</h2>
+        <p>Click to start the investigation</p>
+        <button onclick="alert('Game would start here')">Start Game</button>
+    </div>
+
+    <script>
+        // Simulate the loading process
+        setTimeout(() => {
+            console.log('Hiding loading screen...');
+            document.getElementById('loading-screen').classList.remove('active');
+            document.getElementById('intro-screen').classList.add('active');
+            console.log('Showing intro screen');
+        }, 2000);
+    </script>
+</body>
+</html>

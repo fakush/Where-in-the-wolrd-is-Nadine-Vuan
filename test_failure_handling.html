@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Failure Handling - Nadine Vuan Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background-color: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+        .test-button {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background-color: #ff3742;
+        }
+        .result {
+            background-color: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success { color: #00ff41; }
+        .error { color: #ff4757; }
+        .info { color: #3742fa; }
+    </style>
+</head>
+<body>
+    <h1>🕵️ Nadine Vuan Game - Failure Handling Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Attempts Exhaustion</h2>
+        <p>This test simulates running out of attempts to trigger game over.</p>
+        <button class="test-button" onclick="testAttemptsExhaustion()">Test Attempts Exhaustion</button>
+        <div id="attempts-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Session Isolation</h2>
+        <p>This test verifies that restarting creates a completely isolated session.</p>
+        <button class="test-button" onclick="testSessionIsolation()">Test Session Isolation</button>
+        <div id="session-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Game Over Messages</h2>
+        <p>This test checks different game over message types.</p>
+        <button class="test-button" onclick="testGameOverMessages()">Test Game Over Messages</button>
+        <div id="messages-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: State Validation</h2>
+        <p>This test verifies that game state validation works correctly.</p>
+        <button class="test-button" onclick="testStateValidation()">Test State Validation</button>
+        <div id="validation-result" class="result"></div>
+    </div>
+
+    <script src="src/game.js"></script>
+    <script>
+        // Test functions
+        function testAttemptsExhaustion() {
+            const resultDiv = document.getElementById('attempts-result');
+            resultDiv.innerHTML = '<div class="info">Testing attempts exhaustion...</div>';
+            
+            try {
+                // Create a test game controller
+                const gameController = new GameController();
+                
+                // Simulate exhausting attempts
+                gameController.gameState.gameStats.attemptsRemaining = 0;
+                
+                // Check failure conditions
+                const failureResult = gameController.checkFailureConditions();
+                
+                if (failureResult.hasFailed && failureResult.failureType === 'attempts_exhausted') {
+                    resultDiv.innerHTML += '<div class="success">✅ Attempts exhaustion detected correctly</div>';
+                    
+                    // Test game over message
+                    const message = gameController.getGameOverMessage(failureResult.failureType, failureResult.details);
+                    resultDiv.innerHTML += `<div class="info">Game over message: ${message.title}</div>`;
+                    resultDiv.innerHTML += `<div class="info">Primary: ${message.primary}</div>`;
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ Attempts exhaustion not detected</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testSessionIsolation() {
+            const resultDiv = document.getElementById('session-result');
+            resultDiv.innerHTML = '<div class="info">Testing session isolation...</div>';
+            
+            try {
+                // Create two game controllers
+                const gameController1 = new GameController();
+                const gameController2 = new GameController();
+                
+                // Check that session IDs are different
+                const sessionId1 = gameController1.gameState.sessionId;
+                const sessionId2 = gameController2.gameState.sessionId;
+                
+                if (sessionId1 !== sessionId2) {
+                    resultDiv.innerHTML += '<div class="success">✅ Session IDs are unique</div>';
+                    resultDiv.innerHTML += `<div class="info">Session 1: ${sessionId1}</div>`;
+                    resultDiv.innerHTML += `<div class="info">Session 2: ${sessionId2}</div>`;
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ Session IDs are not unique</div>';
+                }
+                
+                // Test session independence
+                const testResults = gameController1.testSessionIndependence();
+                if (testResults.errors.length === 0) {
+                    resultDiv.innerHTML += '<div class="success">✅ Session independence test passed</div>';
+                } else {
+                    resultDiv.innerHTML += `<div class="error">❌ Session independence issues: ${testResults.errors.join(', ')}</div>`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testGameOverMessages() {
+            const resultDiv = document.getElementById('messages-result');
+            resultDiv.innerHTML = '<div class="info">Testing game over messages...</div>';
+            
+            try {
+                const gameController = new GameController();
+                
+                // Test different failure types
+                const failureTypes = ['attempts_exhausted', 'time_exceeded', 'no_cities_remaining'];
+                
+                failureTypes.forEach(failureType => {
+                    const message = gameController.getGameOverMessage(failureType, {
+                        citiesVisited: 5,
+                        cluesCollected: 3,
+                        timeSpent: '15:30'
+                    });
+                    
+                    resultDiv.innerHTML += `<div class="success">✅ ${failureType}: ${message.title}</div>`;
+                    resultDiv.innerHTML += `<div class="info">Action: ${message.actionText}</div>`;
+                });
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testStateValidation() {
+            const resultDiv = document.getElementById('validation-result');
+            resultDiv.innerHTML = '<div class="info">Testing state validation...</div>';
+            
+            try {
+                const gameController = new GameController();
+                
+                // Test valid state
+                const validState = {
+                    sessionId: 'test_session_123',
+                    phase: 'investigation',
+                    visitedCities: ['new_york', 'london'],
+                    collectedClues: [],
+                    gameStats: {
+                        citiesVisited: 2,
+                        correctDeductions: 1,
+                        attemptsRemaining: 8
+                    },
+                    isGameComplete: false,
+                    hasWon: false
+                };
+                
+                if (gameController.gameState.validateSavedState(validState)) {
+                    resultDiv.innerHTML += '<div class="success">✅ Valid state validation passed</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ Valid state validation failed</div>';
+                }
+                
+                // Test invalid state
+                const invalidState = {
+                    phase: 'invalid_phase',
+                    visitedCities: 'not_an_array',
+                    gameStats: {
+                        attemptsRemaining: -5 // Invalid value
+                    }
+                };
+                
+                if (!gameController.gameState.validateSavedState(invalidState)) {
+                    resultDiv.innerHTML += '<div class="success">✅ Invalid state correctly rejected</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ Invalid state incorrectly accepted</div>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            console.log('Failure handling test page loaded');
+        });
+    </script>
+</body>
+</html>

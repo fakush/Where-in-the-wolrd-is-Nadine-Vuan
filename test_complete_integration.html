@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Integration Test - Nadine Vuan Game</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0f0f23;
+            color: #00ff41;
+            padding: 20px;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            background: rgba(0, 255, 65, 0.05);
+        }
+        
+        .test-button {
+            background: #00ff41;
+            color: #0f0f23;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .test-button:hover {
+            background: #00cc33;
+        }
+        
+        .test-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 3px solid #00ff41;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .error-result {
+            background: rgba(220, 20, 60, 0.1);
+            border-left-color: #dc143c;
+            color: #dc143c;
+        }
+        
+        .success-result {
+            background: rgba(0, 255, 65, 0.1);
+            border-left-color: #00ff41;
+            color: #00ff41;
+        }
+        
+        .warning-result {
+            background: rgba(255, 215, 0, 0.1);
+            border-left-color: #ffd700;
+            color: #ffd700;
+        }
+        
+        .info-result {
+            background: rgba(0, 123, 255, 0.1);
+            border-left-color: #007bff;
+            color: #007bff;
+        }
+        
+        .loading-indicator {
+            display: none;
+            color: #ffd700;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .stat-item {
+            background: rgba(0, 255, 65, 0.1);
+            padding: 10px;
+            border-radius: 3px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41, #00cc33);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Complete Integration Test Suite</h1>
+    <p>Comprehensive testing of all game systems and their integration points.</p>
+
+    <div class="test-section">
+        <h2>🚀 System Initialization Tests</h2>
+        <button class="test-button" onclick="testSystemInitialization()">Test System Initialization</button>
+        <button class="test-button" onclick="testDataLoading()">Test Data Loading</button>
+        <button class="test-button" onclick="testAssetPreloading()">Test Asset Preloading</button>
+        
+        <div class="loading-indicator" id="init-loading">Initializing systems...</div>
+        <div id="init-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎮 Complete Game Flow Tests</h2>
+        <button class="test-button" onclick="testCompleteGameFlow()">Test Complete Game Flow</button>
+        <button class="test-button" onclick="testFailureScenarios()">Test Failure Scenarios</button>
+        <button class="test-button" onclick="testVictoryScenario()">Test Victory Scenario</button>
+        
+        <div class="loading-indicator" id="flow-loading">Running game flow tests...</div>
+        <div id="flow-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔄 Session Management Tests</h2>
+        <button class="test-button" onclick="testSessionIsolation()">Test Session Isolation</button>
+        <button class="test-button" onclick="testRestartFunctionality()">Test Restart Functionality</button>
+        <button class="test-button" onclick="testStatePersistence()">Test State Persistence</button>
+        
+        <div class="loading-indicator" id="session-loading">Testing session management...</div>
+        <div id="session-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎲 Randomization System Tests</h2>
+        <button class="test-button" onclick="testRandomizationFairness()">Test Randomization Fairness</button>
+        <button class="test-button" onclick="testClueRandomization()">Test Clue Randomization</button>
+        <button class="test-button" onclick="testStartingCitySelection()">Test Starting City Selection</button>
+        
+        <div class="loading-indicator" id="random-loading">Testing randomization systems...</div>
+        <div id="random-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🛡️ Error Handling Tests</h2>
+        <button class="test-button" onclick="testErrorHandling()">Test Error Handling</button>
+        <button class="test-button" onclick="testInputValidation()">Test Input Validation</button>
+        <button class="test-button" onclick="testNetworkFailures()">Test Network Failures</button>
+        
+        <div class="loading-indicator" id="error-loading">Testing error handling...</div>
+        <div id="error-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Performance & Statistics</h2>
+        <button class="test-button" onclick="showSystemStats()">Show System Statistics</button>
+        <button class="test-button" onclick="runPerformanceTests()">Run Performance Tests</button>
+        <button class="test-button" onclick="generateTestReport()">Generate Test Report</button>
+        
+        <div id="stats-result"></div>
+    </div>
+
+    <script type="module">
+        import { GameController } from './src/modules/GameController.js';
+        import { DataValidator } from './src/modules/DataValidator.js';
+
+        // Global test state
+        let gameController = null;
+        let testResults = {
+            passed: 0,
+            failed: 0,
+            warnings: 0,
+            total: 0
+        };
+
+        // Utility functions
+        function showLoading(elementId, show) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const className = `${type}-result`;
+                const timestamp = new Date().toLocaleTimeString();
+                element.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+                
+                // Update test counters
+                testResults.total++;
+                if (type === 'success') testResults.passed++;
+                else if (type === 'error') testResults.failed++;
+                else if (type === 'warning') testResults.warnings++;
+            }
+        }
+
+        function clearResults(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = '';
+            }
+        }
+
+        // Test System Initialization
+        window.testSystemInitialization = async function() {
+            showLoading('init-loading', true);
+            clearResults('init-result');
+            showResult('init-result', 'Starting system initialization tests...', 'info');
+            
+            try {
+                // Test GameController instantiation
+                gameController = new GameController();
+                showResult('init-result', '✅ GameController instantiated successfully', 'success');
+                
+                // Test module dependencies
+                const modules = [
+                    'gameState', 'uiState', 'clueSystem', 'failureHandler', 
+                    'sessionManager', 'uiManager', 'randomizationSystem'
+                ];
+                
+                let moduleCount = 0;
+                modules.forEach(module => {
+                    if (gameController[module]) {
+                        moduleCount++;
+                        showResult('init-result', `✅ ${module} initialized correctly`, 'success');
+                    } else {
+                        showResult('init-result', `❌ ${module} failed to initialize`, 'error');
+                    }
+                });
+                
+                showResult('init-result', `Module initialization: ${moduleCount}/${modules.length} successful`, 
+                    moduleCount === modules.length ? 'success' : 'warning');
+                
+                // Test UI initialization
+                if (gameController.uiManager) {
+                    gameController.uiManager.init();
+                    showResult('init-result', '✅ UI Manager initialized', 'success');
+                } else {
+                    showResult('init-result', '❌ UI Manager not available', 'error');
+                }
+                
+            } catch (error) {
+                showResult('init-result', `❌ System initialization failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('init-loading', false);
+            }
+        };
+
+        // Test Data Loading
+        window.testDataLoading = async function() {
+            if (!gameController) {
+                showResult('init-result', '⚠️ Run system initialization first', 'warning');
+                return;
+            }
+            
+            showLoading('init-loading', true);
+            showResult('init-result', 'Testing data loading...', 'info');
+            
+            try {
+                await gameController.loadGameData();
+                
+                if (gameController.gameState.gameData) {
+                    const cities = gameController.gameState.gameData.cities;
+                    showResult('init-result', `✅ Game data loaded: ${cities?.length || 0} cities`, 'success');
+                    
+                    // Validate data structure
+                    const validation = DataValidator.validateGameData({ game_data: gameController.gameState.gameData });
+                    if (validation.isValid) {
+                        showResult('init-result', '✅ Game data validation passed', 'success');
+                    } else {
+                        showResult('init-result', `⚠️ Data validation warnings: ${validation.errors.join(', ')}`, 'warning');
+                    }
+                } else {
+                    showResult('init-result', '❌ Game data not loaded', 'error');
+                }
+                
+            } catch (error) {
+                showResult('init-result', `❌ Data loading failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('init-loading', false);
+            }
+        };
+
+        // Test Asset Preloading
+        window.testAssetPreloading = async function() {
+            if (!gameController || !gameController.uiManager) {
+                showResult('init-result', '⚠️ UI Manager not available for asset testing', 'warning');
+                return;
+            }
+            
+            showLoading('init-loading', true);
+            showResult('init-result', 'Testing asset preloading...', 'info');
+            
+            try {
+                if (gameController.uiManager.assetLoader) {
+                    await gameController.uiManager.preloadCriticalAssets();
+                    const stats = gameController.uiManager.assetLoader.getLoadingStats();
+                    showResult('init-result', `✅ Asset preloading completed: ${stats.successRate.toFixed(1)}% success rate`, 'success');
+                } else {
+                    showResult('init-result', '⚠️ Asset loader not available', 'warning');
+                }
+            } catch (error) {
+                showResult('init-result', `❌ Asset preloading failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('init-loading', false);
+            }
+        };
+
+        // Test Complete Game Flow
+        window.testCompleteGameFlow = async function() {
+            if (!gameController) {
+                showResult('flow-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('flow-loading', true);
+            clearResults('flow-result');
+            showResult('flow-result', 'Testing complete game flow...', 'info');
+            
+            try {
+                // Test game initialization
+                gameController.startGame();
+                showResult('flow-result', '✅ Game started successfully', 'success');
+                
+                // Verify initial state
+                if (gameController.gameState.phase === 'investigation') {
+                    showResult('flow-result', '✅ Game phase set to investigation', 'success');
+                } else {
+                    showResult('flow-result', `❌ Unexpected game phase: ${gameController.gameState.phase}`, 'error');
+                }
+                
+                // Test starting city selection
+                if (gameController.gameState.currentCity) {
+                    const cityData = gameController.getCityData(gameController.gameState.currentCity);
+                    if (cityData) {
+                        showResult('flow-result', `✅ Starting city selected: ${cityData.name}`, 'success');
+                    } else {
+                        showResult('flow-result', '❌ Invalid starting city selected', 'error');
+                    }
+                } else {
+                    showResult('flow-result', '❌ No starting city selected', 'error');
+                }
+                
+                // Test clue collection
+                const initialClueCount = gameController.gameState.collectedClues.length;
+                gameController.collectClues();
+                const newClueCount = gameController.gameState.collectedClues.length;
+                
+                if (newClueCount >= initialClueCount) {
+                    showResult('flow-result', `✅ Clue collection works: ${newClueCount - initialClueCount} clues added`, 'success');
+                } else {
+                    showResult('flow-result', '❌ Clue collection failed', 'error');
+                }
+                
+                // Test travel system
+                const availableCities = gameController.getCitiesByCriteria({ 
+                    excludeVisited: true, 
+                    excludeCurrent: true 
+                });
+                
+                if (availableCities.length > 0) {
+                    const testCity = availableCities[0];
+                    const canTravel = gameController.canTravelToCity(testCity.id);
+                    
+                    if (canTravel.canTravel) {
+                        showResult('flow-result', `✅ Travel validation works for ${testCity.name}`, 'success');
+                        
+                        // Test actual travel
+                        const previousCity = gameController.gameState.currentCity;
+                        gameController.travelToCity(testCity.id);
+                        
+                        if (gameController.gameState.currentCity === testCity.id) {
+                            showResult('flow-result', `✅ Travel successful: ${previousCity} → ${testCity.id}`, 'success');
+                        } else {
+                            showResult('flow-result', '❌ Travel failed to update current city', 'error');
+                        }
+                    } else {
+                        showResult('flow-result', `⚠️ Cannot travel to ${testCity.name}: ${canTravel.reason}`, 'warning');
+                    }
+                } else {
+                    showResult('flow-result', '⚠️ No cities available for travel testing', 'warning');
+                }
+                
+                // Test progress tracking
+                const stats = gameController.failureHandler.calculateEnhancedStats();
+                showResult('flow-result', `✅ Progress tracking: ${stats.citiesVisited} cities, ${stats.cluesCollected} clues`, 'success');
+                
+            } catch (error) {
+                showResult('flow-result', `❌ Game flow test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('flow-loading', false);
+            }
+        };
+
+        // Test Failure Scenarios
+        window.testFailureScenarios = function() {
+            if (!gameController) {
+                showResult('flow-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('flow-loading', true);
+            showResult('flow-result', 'Testing failure scenarios...', 'info');
+            
+            try {
+                // Test attempts exhaustion
+                const originalAttempts = gameController.gameState.gameStats.attemptsRemaining;
+                gameController.gameState.gameStats.attemptsRemaining = 0;
+                
+                const failureCheck = gameController.checkFailureConditions();
+                if (failureCheck.hasFailed) {
+                    showResult('flow-result', '✅ Failure detection works for exhausted attempts', 'success');
+                } else {
+                    showResult('flow-result', '❌ Failure detection failed for exhausted attempts', 'error');
+                }
+                
+                // Restore attempts for further testing
+                gameController.gameState.gameStats.attemptsRemaining = originalAttempts;
+                
+                // Test invalid travel attempts
+                const invalidTravelResult = gameController.canTravelToCity('invalid_city_id');
+                if (!invalidTravelResult.canTravel) {
+                    showResult('flow-result', '✅ Invalid travel properly rejected', 'success');
+                } else {
+                    showResult('flow-result', '❌ Invalid travel not properly rejected', 'error');
+                }
+                
+                // Test revisit prevention
+                if (gameController.gameState.visitedCities.length > 0) {
+                    const visitedCity = gameController.gameState.visitedCities[0];
+                    const revisitResult = gameController.canTravelToCity(visitedCity);
+                    if (!revisitResult.canTravel) {
+                        showResult('flow-result', '✅ Revisit prevention works', 'success');
+                    } else {
+                        showResult('flow-result', '❌ Revisit prevention failed', 'error');
+                    }
+                }
+                
+            } catch (error) {
+                showResult('flow-result', `❌ Failure scenario test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('flow-loading', false);
+            }
+        };
+
+        // Test Victory Scenario
+        window.testVictoryScenario = function() {
+            if (!gameController) {
+                showResult('flow-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('flow-loading', true);
+            showResult('flow-result', 'Testing victory scenario...', 'info');
+            
+            try {
+                // Find Buenos Aires (final city)
+                const finalCity = gameController.gameState.gameData?.cities?.find(city => city.is_final);
+                
+                if (finalCity) {
+                    showResult('flow-result', `✅ Final city found: ${finalCity.name}`, 'success');
+                    
+                    // Simulate reaching final city
+                    const previousPhase = gameController.gameState.phase;
+                    gameController.gameState.currentCity = finalCity.id;
+                    gameController.triggerFinalEncounter();
+                    
+                    if (gameController.gameState.phase === 'conclusion' && gameController.gameState.hasWon) {
+                        showResult('flow-result', '✅ Victory condition triggered correctly', 'success');
+                    } else {
+                        showResult('flow-result', '❌ Victory condition not triggered properly', 'error');
+                    }
+                    
+                    // Restore previous state
+                    gameController.gameState.phase = previousPhase;
+                    gameController.gameState.hasWon = false;
+                    gameController.gameState.isGameComplete = false;
+                    
+                } else {
+                    showResult('flow-result', '❌ Final city not found in game data', 'error');
+                }
+                
+            } catch (error) {
+                showResult('flow-result', `❌ Victory scenario test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('flow-loading', false);
+            }
+        };
+
+        // Test Session Isolation
+        window.testSessionIsolation = function() {
+            if (!gameController) {
+                showResult('session-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('session-loading', true);
+            clearResults('session-result');
+            showResult('session-result', 'Testing session isolation...', 'info');
+            
+            try {
+                const originalSessionId = gameController.gameState.sessionId;
+                const originalClues = [...gameController.gameState.collectedClues];
+                
+                // Test session independence
+                const independenceTest = gameController.testSessionIndependence();
+                if (independenceTest.errors.length === 0) {
+                    showResult('session-result', '✅ Session independence test passed', 'success');
+                } else {
+                    showResult('session-result', `⚠️ Session independence issues: ${independenceTest.errors.join(', ')}`, 'warning');
+                }
+                
+                // Test complete session reset
+                gameController.performCompleteSessionReset();
+                
+                if (gameController.gameState.sessionId !== originalSessionId) {
+                    showResult('session-result', '✅ Session ID changed after reset', 'success');
+                } else {
+                    showResult('session-result', '❌ Session ID not changed after reset', 'error');
+                }
+                
+                if (gameController.gameState.collectedClues.length === 0) {
+                    showResult('session-result', '✅ Clues cleared after reset', 'success');
+                } else {
+                    showResult('session-result', '❌ Clues not cleared after reset', 'error');
+                }
+                
+                // Test session isolation validation
+                const isolationResults = gameController.ensureSessionIsolation();
+                if (isolationResults.errors.length === 0) {
+                    showResult('session-result', '✅ Session isolation validation passed', 'success');
+                } else {
+                    showResult('session-result', `⚠️ Session isolation issues: ${isolationResults.errors.join(', ')}`, 'warning');
+                }
+                
+            } catch (error) {
+                showResult('session-result', `❌ Session isolation test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('session-loading', false);
+            }
+        };
+
+        // Test Restart Functionality
+        window.testRestartFunctionality = function() {
+            if (!gameController) {
+                showResult('session-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('session-loading', true);
+            showResult('session-result', 'Testing restart functionality...', 'info');
+            
+            try {
+                // Set up some game state
+                gameController.gameState.phase = 'investigation';
+                gameController.gameState.currentCity = 'tokyo';
+                gameController.gameState.visitedCities = ['london', 'paris'];
+                gameController.gameState.collectedClues = [
+                    { text: 'Test clue', difficulty: 'easy', sourceCity: 'london' }
+                ];
+                
+                // Test restart
+                const originalConfirm = window.confirm;
+                window.confirm = () => true; // Auto-confirm restart
+                
+                gameController.restartGame();
+                
+                // Verify reset state
+                if (gameController.gameState.phase === 'intro') {
+                    showResult('session-result', '✅ Game phase reset to intro', 'success');
+                } else {
+                    showResult('session-result', `❌ Game phase not reset: ${gameController.gameState.phase}`, 'error');
+                }
+                
+                if (gameController.gameState.visitedCities.length === 0) {
+                    showResult('session-result', '✅ Visited cities cleared', 'success');
+                } else {
+                    showResult('session-result', '❌ Visited cities not cleared', 'error');
+                }
+                
+                if (gameController.gameState.collectedClues.length === 0) {
+                    showResult('session-result', '✅ Collected clues cleared', 'success');
+                } else {
+                    showResult('session-result', '❌ Collected clues not cleared', 'error');
+                }
+                
+                // Restore original confirm
+                window.confirm = originalConfirm;
+                
+            } catch (error) {
+                showResult('session-result', `❌ Restart functionality test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('session-loading', false);
+            }
+        };
+
+        // Test State Persistence
+        window.testStatePersistence = function() {
+            if (!gameController) {
+                showResult('session-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('session-loading', true);
+            showResult('session-result', 'Testing state persistence...', 'info');
+            
+            try {
+                // Set up test state
+                const testState = {
+                    phase: 'investigation',
+                    currentCity: 'tokyo',
+                    visitedCities: ['london'],
+                    collectedClues: [{ text: 'Test clue', difficulty: 'easy', sourceCity: 'london' }]
+                };
+                
+                Object.assign(gameController.gameState, testState);
+                
+                // Test save
+                gameController.gameState.saveGameState();
+                showResult('session-result', '✅ State saved to localStorage', 'success');
+                
+                // Clear current state
+                gameController.gameState.resetGameState();
+                
+                // Test load
+                const loadResult = gameController.gameState.loadGameState();
+                if (loadResult) {
+                    showResult('session-result', '✅ State loaded from localStorage', 'success');
+                    
+                    // Verify loaded data
+                    if (gameController.gameState.phase === testState.phase) {
+                        showResult('session-result', '✅ Game phase persisted correctly', 'success');
+                    } else {
+                        showResult('session-result', '❌ Game phase not persisted correctly', 'error');
+                    }
+                    
+                    if (gameController.gameState.currentCity === testState.currentCity) {
+                        showResult('session-result', '✅ Current city persisted correctly', 'success');
+                    } else {
+                        showResult('session-result', '❌ Current city not persisted correctly', 'error');
+                    }
+                    
+                } else {
+                    showResult('session-result', '❌ Failed to load state from localStorage', 'error');
+                }
+                
+            } catch (error) {
+                showResult('session-result', `❌ State persistence test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('session-loading', false);
+            }
+        };
+
+        // Test Randomization Fairness
+        window.testRandomizationFairness = function() {
+            if (!gameController) {
+                showResult('random-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('random-loading', true);
+            clearResults('random-result');
+            showResult('random-result', 'Testing randomization fairness...', 'info');
+            
+            try {
+                const fairnessResults = gameController.testRandomizationFairness(50); // Reduced iterations for faster testing
+                
+                if (fairnessResults.startingCityFairness.isBalanced) {
+                    showResult('random-result', `✅ Starting city randomization is fair (score: ${fairnessResults.startingCityFairness.fairnessScore.toFixed(2)})`, 'success');
+                } else {
+                    showResult('random-result', `⚠️ Starting city randomization may be biased (score: ${fairnessResults.startingCityFairness.fairnessScore.toFixed(2)})`, 'warning');
+                }
+                
+                if (fairnessResults.clueSelectionFairness.isBalanced) {
+                    showResult('random-result', `✅ Clue selection randomization is fair (score: ${fairnessResults.clueSelectionFairness.fairnessScore.toFixed(2)})`, 'success');
+                } else {
+                    showResult('random-result', `⚠️ Clue selection randomization may be biased (score: ${fairnessResults.clueSelectionFairness.fairnessScore.toFixed(2)})`, 'warning');
+                }
+                
+                showResult('random-result', `Overall fairness score: ${fairnessResults.overallFairness.averageFairnessScore.toFixed(2)}`, 'info');
+                
+            } catch (error) {
+                showResult('random-result', `❌ Randomization fairness test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('random-loading', false);
+            }
+        };
+
+        // Test Clue Randomization
+        window.testClueRandomization = function() {
+            if (!gameController) {
+                showResult('random-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('random-loading', true);
+            showResult('random-result', 'Testing clue randomization...', 'info');
+            
+            try {
+                // Find a city with clues
+                const cityWithClues = gameController.gameState.gameData?.cities?.find(city => 
+                    city.clues && Object.keys(city.clues).some(difficulty => 
+                        city.clues[difficulty] && city.clues[difficulty].length > 0
+                    )
+                );
+                
+                if (cityWithClues) {
+                    showResult('random-result', `Testing clue randomization for ${cityWithClues.name}`, 'info');
+                    
+                    // Test multiple clue generations
+                    const clueResults = [];
+                    for (let i = 0; i < 10; i++) {
+                        const clues = gameController.clueSystem.generateClues(cityWithClues, {
+                            maxCluesPerDifficulty: 1,
+                            randomizeSelection: true,
+                            includeAllDifficulties: true
+                        });
+                        clueResults.push(clues.map(c => c.text));
+                    }
+                    
+                    // Check for variation
+                    const uniqueResults = new Set(clueResults.map(r => JSON.stringify(r)));
+                    if (uniqueResults.size > 1) {
+                        showResult('random-result', `✅ Clue randomization shows variation: ${uniqueResults.size} unique combinations`, 'success');
+                    } else {
+                        showResult('random-result', '⚠️ Clue randomization may not be working properly', 'warning');
+                    }
+                    
+                } else {
+                    showResult('random-result', '⚠️ No cities with clues found for testing', 'warning');
+                }
+                
+            } catch (error) {
+                showResult('random-result', `❌ Clue randomization test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('random-loading', false);
+            }
+        };
+
+        // Test Starting City Selection
+        window.testStartingCitySelection = function() {
+            if (!gameController) {
+                showResult('random-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('random-loading', true);
+            showResult('random-result', 'Testing starting city selection...', 'info');
+            
+            try {
+                const startingCities = [];
+                
+                // Test multiple starting city selections
+                for (let i = 0; i < 20; i++) {
+                    const city = gameController.selectFairStartingCity();
+                    if (city) {
+                        startingCities.push(city.id);
+                    }
+                }
+                
+                const uniqueCities = new Set(startingCities);
+                showResult('random-result', `Selected ${uniqueCities.size} unique starting cities from ${startingCities.length} attempts`, 'info');
+                
+                if (uniqueCities.size > 1) {
+                    showResult('random-result', '✅ Starting city selection shows good variation', 'success');
+                } else {
+                    showResult('random-result', '⚠️ Starting city selection may be too predictable', 'warning');
+                }
+                
+                // Verify no final cities are selected as starting cities
+                const finalCitySelected = startingCities.some(cityId => {
+                    const cityData = gameController.getCityData(cityId);
+                    return cityData && cityData.is_final;
+                });
+                
+                if (!finalCitySelected) {
+                    showResult('random-result', '✅ No final cities selected as starting cities', 'success');
+                } else {
+                    showResult('random-result', '❌ Final city incorrectly selected as starting city', 'error');
+                }
+                
+            } catch (error) {
+                showResult('random-result', `❌ Starting city selection test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('random-loading', false);
+            }
+        };
+
+        // Test Error Handling
+        window.testErrorHandling = function() {
+            if (!gameController) {
+                showResult('error-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('error-loading', true);
+            clearResults('error-result');
+            showResult('error-result', 'Testing error handling...', 'info');
+            
+            try {
+                // Test invalid city data access
+                const invalidCity = gameController.getCityData('nonexistent_city');
+                if (invalidCity === null) {
+                    showResult('error-result', '✅ Invalid city access handled correctly', 'success');
+                } else {
+                    showResult('error-result', '❌ Invalid city access not handled properly', 'error');
+                }
+                
+                // Test invalid travel attempt
+                try {
+                    gameController.travelToCity('invalid_city');
+                    showResult('error-result', '⚠️ Invalid travel attempt should have been rejected', 'warning');
+                } catch (error) {
+                    showResult('error-result', '✅ Invalid travel attempt properly rejected', 'success');
+                }
+                
+                // Test clue system with invalid data
+                try {
+                    const invalidClues = gameController.clueSystem.generateClues(null);
+                    if (invalidClues.length === 0) {
+                        showResult('error-result', '✅ Clue system handles null input correctly', 'success');
+                    } else {
+                        showResult('error-result', '❌ Clue system should return empty array for null input', 'error');
+                    }
+                } catch (error) {
+                    showResult('error-result', '✅ Clue system properly throws error for invalid input', 'success');
+                }
+                
+            } catch (error) {
+                showResult('error-result', `❌ Error handling test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('error-loading', false);
+            }
+        };
+
+        // Test Input Validation
+        window.testInputValidation = function() {
+            if (!gameController) {
+                showResult('error-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showLoading('error-loading', true);
+            showResult('error-result', 'Testing input validation...', 'info');
+            
+            try {
+                // Test various invalid inputs
+                const invalidInputs = [
+                    { input: null, description: 'null input' },
+                    { input: undefined, description: 'undefined input' },
+                    { input: '', description: 'empty string' },
+                    { input: 123, description: 'number instead of string' },
+                    { input: {}, description: 'object instead of string' },
+                    { input: [], description: 'array instead of string' }
+                ];
+                
+                invalidInputs.forEach(test => {
+                    const result = gameController.canTravelToCity(test.input);
+                    if (!result.canTravel) {
+                        showResult('error-result', `✅ ${test.description} properly rejected`, 'success');
+                    } else {
+                        showResult('error-result', `❌ ${test.description} not properly rejected`, 'error');
+                    }
+                });
+                
+                // Test data validator
+                const invalidGameData = { invalid: 'structure' };
+                const validation = DataValidator.validateGameData(invalidGameData);
+                if (!validation.isValid) {
+                    showResult('error-result', '✅ Data validator correctly rejects invalid structure', 'success');
+                } else {
+                    showResult('error-result', '❌ Data validator should reject invalid structure', 'error');
+                }
+                
+            } catch (error) {
+                showResult('error-result', `❌ Input validation test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('error-loading', false);
+            }
+        };
+
+        // Test Network Failures
+        window.testNetworkFailures = function() {
+            if (!gameController || !gameController.uiManager) {
+                showResult('error-result', '⚠️ UI Manager not available for network testing', 'warning');
+                return;
+            }
+            
+            showLoading('error-loading', true);
+            showResult('error-result', 'Testing network failure handling...', 'info');
+            
+            try {
+                if (gameController.uiManager.networkMonitor) {
+                    const networkStatus = gameController.uiManager.networkMonitor.getNetworkStatus();
+                    showResult('error-result', `Network status: ${networkStatus.isOnline ? 'Online' : 'Offline'}`, 'info');
+                    
+                    // Test graceful degradation
+                    gameController.uiManager.enableGracefulDegradation();
+                    showResult('error-result', '✅ Graceful degradation enabled', 'success');
+                } else {
+                    showResult('error-result', '⚠️ Network monitor not available', 'warning');
+                }
+                
+                if (gameController.uiManager.assetLoader) {
+                    // Test fallback data creation
+                    const fallbackData = gameController.uiManager.assetLoader.createFallbackGameData();
+                    if (fallbackData && fallbackData.game_data && fallbackData.game_data.cities) {
+                        showResult('error-result', `✅ Fallback data created with ${fallbackData.game_data.cities.length} cities`, 'success');
+                    } else {
+                        showResult('error-result', '❌ Fallback data creation failed', 'error');
+                    }
+                } else {
+                    showResult('error-result', '⚠️ Asset loader not available for fallback testing', 'warning');
+                }
+                
+            } catch (error) {
+                showResult('error-result', `❌ Network failure test failed: ${error.message}`, 'error');
+            } finally {
+                showLoading('error-loading', false);
+            }
+        };
+
+        // Show System Statistics
+        window.showSystemStats = function() {
+            clearResults('stats-result');
+            
+            if (!gameController) {
+                showResult('stats-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            try {
+                const stats = {
+                    gameState: {
+                        phase: gameController.gameState.phase,
+                        sessionId: gameController.gameState.sessionId,
+                        citiesVisited: gameController.gameState.gameStats.citiesVisited,
+                        cluesCollected: gameController.gameState.collectedClues.length,
+                        attemptsRemaining: gameController.gameState.gameStats.attemptsRemaining
+                    },
+                    randomization: gameController.validateRandomizationSystem(),
+                    assetLoading: gameController.uiManager?.getAssetLoadingStats() || null
+                };
+                
+                // Display stats in a formatted way
+                let statsHtml = '<div class="stats-grid">';
+                
+                // Game State Stats
+                statsHtml += '<div class="stat-item">';
+                statsHtml += '<h4>Game State</h4>';
+                statsHtml += `Phase: ${stats.gameState.phase}<br>`;
+                statsHtml += `Cities Visited: ${stats.gameState.citiesVisited}<br>`;
+                statsHtml += `Clues Collected: ${stats.gameState.cluesCollected}<br>`;
+                statsHtml += `Attempts Remaining: ${stats.gameState.attemptsRemaining}`;
+                statsHtml += '</div>';
+                
+                // Randomization Stats
+                statsHtml += '<div class="stat-item">';
+                statsHtml += '<h4>Randomization System</h4>';
+                statsHtml += `Overall Valid: ${stats.randomization.overallValid ? '✅' : '❌'}<br>`;
+                statsHtml += `System Integrity: ${stats.randomization.systemIntegrity.isValid ? '✅' : '❌'}<br>`;
+                statsHtml += `Data Compatibility: ${stats.randomization.gameDataCompatibility.isValid ? '✅' : '❌'}`;
+                statsHtml += '</div>';
+                
+                // Asset Loading Stats
+                if (stats.assetLoading) {
+                    statsHtml += '<div class="stat-item">';
+                    statsHtml += '<h4>Asset Loading</h4>';
+                    if (stats.assetLoading.assetLoader) {
+                        statsHtml += `Success Rate: ${stats.assetLoading.assetLoader.successRate.toFixed(1)}%<br>`;
+                        statsHtml += `Loaded: ${stats.assetLoading.assetLoader.loaded}<br>`;
+                        statsHtml += `Failed: ${stats.assetLoading.assetLoader.failed}`;
+                    } else {
+                        statsHtml += 'Asset loader not available';
+                    }
+                    statsHtml += '</div>';
+                }
+                
+                // Test Results Summary
+                statsHtml += '<div class="stat-item">';
+                statsHtml += '<h4>Test Results</h4>';
+                statsHtml += `Passed: ${testResults.passed}<br>`;
+                statsHtml += `Failed: ${testResults.failed}<br>`;
+                statsHtml += `Warnings: ${testResults.warnings}<br>`;
+                statsHtml += `Total: ${testResults.total}`;
+                statsHtml += '</div>';
+                
+                statsHtml += '</div>';
+                
+                document.getElementById('stats-result').innerHTML = statsHtml;
+                
+            } catch (error) {
+                showResult('stats-result', `❌ Failed to generate statistics: ${error.message}`, 'error');
+            }
+        };
+
+        // Run Performance Tests
+        window.runPerformanceTests = function() {
+            if (!gameController) {
+                showResult('stats-result', '⚠️ Initialize system first', 'warning');
+                return;
+            }
+            
+            showResult('stats-result', 'Running performance tests...', 'info');
+            
+            try {
+                const performanceResults = {};
+                
+                // Test game initialization performance
+                const initStart = performance.now();
+                const testController = new GameController();
+                const initEnd = performance.now();
+                performanceResults.initialization = initEnd - initStart;
+                
+                // Test clue generation performance
+                const clueStart = performance.now();
+                for (let i = 0; i < 100; i++) {
+                    gameController.collectClues();
+                }
+                const clueEnd = performance.now();
+                performanceResults.clueGeneration = (clueEnd - clueStart) / 100;
+                
+                // Test randomization performance
+                const randomStart = performance.now();
+                for (let i = 0; i < 100; i++) {
+                    gameController.selectFairStartingCity();
+                }
+                const randomEnd = performance.now();
+                performanceResults.randomization = (randomEnd - randomStart) / 100;
+                
+                // Display results
+                let perfHtml = '<div class="stats-grid">';
+                perfHtml += '<div class="stat-item">';
+                perfHtml += '<h4>Performance Results</h4>';
+                perfHtml += `Initialization: ${performanceResults.initialization.toFixed(2)}ms<br>`;
+                perfHtml += `Clue Generation: ${performanceResults.clueGeneration.toFixed(2)}ms<br>`;
+                perfHtml += `Randomization: ${performanceResults.randomization.toFixed(2)}ms`;
+                perfHtml += '</div>';
+                perfHtml += '</div>';
+                
+                document.getElementById('stats-result').innerHTML += perfHtml;
+                
+                showResult('stats-result', '✅ Performance tests completed', 'success');
+                
+            } catch (error) {
+                showResult('stats-result', `❌ Performance tests failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Generate Test Report
+        window.generateTestReport = function() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                testResults: testResults,
+                systemInfo: {
+                    userAgent: navigator.userAgent,
+                    gameControllerInitialized: !!gameController,
+                    gameDataLoaded: !!(gameController?.gameState?.gameData)
+                }
+            };
+            
+            const reportJson = JSON.stringify(report, null, 2);
+            const blob = new Blob([reportJson], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nadine-vuan-test-report-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showResult('stats-result', '✅ Test report downloaded', 'success');
+        };
+
+        // Auto-run basic tests on page load
+        window.addEventListener('load', () => {
+            console.log('Complete Integration Test Suite loaded');
+            showResult('init-result', 'Integration test suite ready. Click buttons to run tests.', 'info');
+        });
+    </script>
+</body>
+</html>

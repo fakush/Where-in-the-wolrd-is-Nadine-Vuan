@@ -122,12 +122,12 @@ While entertaining, the game teaches:
 - **Responsive Design**: Mobile-first approach
 
 ### Core Features to Implement
-1. **Random city generation** for starting location
-2. **Clue randomization** within difficulty tiers
+1. **Fair random city generation** for starting location with balanced distribution
+2. **Advanced clue randomization** within difficulty tiers with fairness guarantees
 3. **Route tracking** to prevent revisiting cities
 4. **Score/time tracking** system
 5. **Win/loss conditions**
-6. **Restart functionality**
+6. **Restart functionality** with session isolation
 
 ## 🎭 Characters
 
@@ -173,9 +173,39 @@ Each city features a unique informant with:
 ## 📝 Game Design Notes
 
 ### Replayability
-- **Random starting city** ensures different experiences
-- **Randomized clue selection** from each difficulty tier
+- **Fair random starting city** ensures different experiences with balanced distribution
+- **Advanced randomized clue selection** from each difficulty tier with fairness guarantees
 - **Multiple paths** to reach Buenos Aires
+- **Session isolation** ensures each playthrough is completely independent
+
+### 🎲 Randomization System
+The game features a sophisticated randomization system that ensures fair and balanced gameplay:
+
+#### Fair Starting City Selection
+- Prevents recently selected cities from being chosen again immediately
+- Ensures all non-final cities have equal probability over multiple games
+- Validates selection integrity and provides fallback mechanisms
+
+#### Balanced Clue Randomization
+- Maintains fair distribution across difficulty tiers (easy, medium, difficult)
+- Tracks selection history to prevent bias toward specific difficulties
+- Supports both seeded and unseeded randomization for testing and gameplay
+
+#### Quality Assurance
+- Built-in fairness testing with configurable iteration counts
+- System validation and integrity checks
+- Comprehensive statistics and monitoring
+- Session isolation to prevent data contamination between games
+
+#### Testing and Validation
+Run the randomization test suite:
+```bash
+# Simple Node.js test
+node test_randomization_simple.js
+
+# Interactive browser test (requires local server)
+# Open test_randomization_system.html in browser
+```
 
 ### Difficulty Balancing
 - Three clues per city, varying in difficulty from hard to easy

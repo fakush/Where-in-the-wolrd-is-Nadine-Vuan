@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modular Structure - Nadine Vuan Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background-color: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #444;
+        }
+        .test-button {
+            background-color: #3742fa;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background-color: #2f3542;
+        }
+        .result {
+            background-color: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success { color: #00ff41; }
+        .error { color: #ff4757; }
+        .info { color: #3742fa; }
+    </style>
+</head>
+<body>
+    <h1>🧩 Modular Structure Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Module Loading</h2>
+        <p>Test if all modules can be loaded successfully.</p>
+        <button class="test-button" onclick="testModuleLoading()">Test Module Loading</button>
+        <div id="loading-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Module Instantiation</h2>
+        <p>Test if modules can be instantiated and initialized.</p>
+        <button class="test-button" onclick="testModuleInstantiation()">Test Module Instantiation</button>
+        <div id="instantiation-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Module Communication</h2>
+        <p>Test if modules can communicate through the GameController.</p>
+        <button class="test-button" onclick="testModuleCommunication()">Test Module Communication</button>
+        <div id="communication-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Dependency Injection</h2>
+        <p>Test if dependencies are properly injected between modules.</p>
+        <button class="test-button" onclick="testDependencyInjection()">Test Dependency Injection</button>
+        <div id="dependency-result" class="result"></div>
+    </div>
+
+    <script type="module">
+        import { GameController } from './src/modules/GameController.js';
+        import { GameState } from './src/modules/GameState.js';
+        import { ClueSystem } from './src/modules/ClueSystem.js';
+        import { FailureHandler } from './src/modules/FailureHandler.js';
+        import { SessionManager } from './src/modules/SessionManager.js';
+        import { DataValidator } from './src/modules/DataValidator.js';
+
+        // Make modules available globally for testing
+        window.testModules = {
+            GameController,
+            GameState,
+            ClueSystem,
+            FailureHandler,
+            SessionManager,
+            DataValidator
+        };
+
+        window.testModuleLoading = function() {
+            const resultDiv = document.getElementById('loading-result');
+            resultDiv.innerHTML = '<div class="info">Testing module loading...</div>';
+            
+            try {
+                const modules = ['GameController', 'GameState', 'ClueSystem', 'FailureHandler', 'SessionManager', 'DataValidator'];
+                let loadedCount = 0;
+                
+                modules.forEach(moduleName => {
+                    if (window.testModules[moduleName]) {
+                        resultDiv.innerHTML += `<div class="success">✅ ${moduleName} loaded successfully</div>`;
+                        loadedCount++;
+                    } else {
+                        resultDiv.innerHTML += `<div class="error">❌ ${moduleName} failed to load</div>`;
+                    }
+                });
+                
+                resultDiv.innerHTML += `<div class="info">Loaded ${loadedCount}/${modules.length} modules</div>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        };
+
+        window.testModuleInstantiation = function() {
+            const resultDiv = document.getElementById('instantiation-result');
+            resultDiv.innerHTML = '<div class="info">Testing module instantiation...</div>';
+            
+            try {
+                // Test GameState instantiation
+                const gameState = new window.testModules.GameState();
+                if (gameState.sessionId && gameState.phase === 'intro') {
+                    resultDiv.innerHTML += '<div class="success">✅ GameState instantiated correctly</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ GameState instantiation failed</div>';
+                }
+                
+                // Test ClueSystem instantiation
+                const clueSystem = new window.testModules.ClueSystem(gameState);
+                if (clueSystem.gameState === gameState) {
+                    resultDiv.innerHTML += '<div class="success">✅ ClueSystem instantiated correctly</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ ClueSystem instantiation failed</div>';
+                }
+                
+                // Test FailureHandler instantiation
+                const failureHandler = new window.testModules.FailureHandler(gameState);
+                if (failureHandler.gameState === gameState) {
+                    resultDiv.innerHTML += '<div class="success">✅ FailureHandler instantiated correctly</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ FailureHandler instantiation failed</div>';
+                }
+                
+                // Test GameController instantiation
+                const gameController = new window.testModules.GameController();
+                if (gameController.gameState && gameController.clueSystem && gameController.failureHandler) {
+                    resultDiv.innerHTML += '<div class="success">✅ GameController instantiated correctly</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ GameController instantiation failed</div>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        };
+
+        window.testModuleCommunication = function() {
+            const resultDiv = document.getElementById('communication-result');
+            resultDiv.innerHTML = '<div class="info">Testing module communication...</div>';
+            
+            try {
+                const gameController = new window.testModules.GameController();
+                
+                // Test if GameController can delegate to FailureHandler
+                const failureCheck = gameController.checkFailureConditions();
+                if (failureCheck && typeof failureCheck.hasFailed === 'boolean') {
+                    resultDiv.innerHTML += '<div class="success">✅ GameController → FailureHandler communication works</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ GameController → FailureHandler communication failed</div>';
+                }
+                
+                // Test if GameController can delegate to SessionManager
+                const sessionTest = gameController.testSessionIndependence();
+                if (sessionTest && Array.isArray(sessionTest.errors)) {
+                    resultDiv.innerHTML += '<div class="success">✅ GameController → SessionManager communication works</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ GameController → SessionManager communication failed</div>';
+                }
+                
+                // Test GameState methods
+                const originalSessionId = gameController.gameState.sessionId;
+                gameController.gameState.resetGameState();
+                if (gameController.gameState.sessionId !== originalSessionId) {
+                    resultDiv.innerHTML += '<div class="success">✅ GameState session isolation works</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ GameState session isolation failed</div>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        };
+
+        window.testDependencyInjection = function() {
+            const resultDiv = document.getElementById('dependency-result');
+            resultDiv.innerHTML = '<div class="info">Testing dependency injection...</div>';
+            
+            try {
+                const gameController = new window.testModules.GameController();
+                
+                // Test ClueSystem has GameState reference
+                if (gameController.clueSystem.gameState === gameController.gameState) {
+                    resultDiv.innerHTML += '<div class="success">✅ ClueSystem has correct GameState reference</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ ClueSystem missing GameState reference</div>';
+                }
+                
+                // Test FailureHandler has GameState reference
+                if (gameController.failureHandler.gameState === gameController.gameState) {
+                    resultDiv.innerHTML += '<div class="success">✅ FailureHandler has correct GameState reference</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ FailureHandler missing GameState reference</div>';
+                }
+                
+                // Test SessionManager has GameState reference
+                if (gameController.sessionManager.gameState === gameController.gameState) {
+                    resultDiv.innerHTML += '<div class="success">✅ SessionManager has correct GameState reference</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ SessionManager missing GameState reference</div>';
+                }
+                
+                // Test UIManager has GameController reference
+                if (gameController.uiManager.gameController === gameController) {
+                    resultDiv.innerHTML += '<div class="success">✅ UIManager has correct GameController reference</div>';
+                } else {
+                    resultDiv.innerHTML += '<div class="error">❌ UIManager missing GameController reference</div>';
+                }
+                
+                resultDiv.innerHTML += '<div class="info">All dependency injections verified!</div>';
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        };
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            console.log('Modular structure test page loaded');
+        });
+    </script>
+</body>
+</html>

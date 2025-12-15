@@ -34,7 +34,7 @@
         "not_here_response": "No, no he visto a esa mujer por aquí. Tal vez en otra ciudad."
       },
       {
-        "id": "rome",
+        "id": "roma",
         "name": "Roma",
         "country": "Italia",
         "is_final": false,
@@ -64,7 +64,7 @@
         "not_here_response": "No, quella donna non è passata di qui. Prova altrove."
       },
       {
-        "id": "marrakech",
+        "id": "marruecos",
         "name": "Marrakech",
         "country": "Marruecos",
         "is_final": false,
@@ -154,7 +154,7 @@
         "not_here_response": "Nei, esa mujer no ha estado aquí. Tal vez en otro país."
       },
       {
-        "id": "mexico_city",
+        "id": "mexico",
         "name": "Ciudad de México",
         "country": "México",
         "is_final": false,
@@ -214,7 +214,7 @@
         "not_here_response": "Nah mate, haven't seen that sheila around here. Try another city."
       },
       {
-        "id": "istanbul",
+        "id": "estambul",
         "name": "Estambul",
         "country": "Turquía",
         "is_final": false,
@@ -274,7 +274,7 @@
         "not_here_response": "Mai chai ka, that woman hasn't been here. Try somewhere else."
       },
       {
-        "id": "new_york",
+        "id": "newYork",
         "name": "Nueva York",
         "country": "Estados Unidos",
         "is_final": false,
@@ -304,7 +304,7 @@
         "not_here_response": "Nah bro, that lady ain't been here. Try another spot."
       },
       {
-        "id": "buenos_aires",
+        "id": "buenosAires",
         "name": "Buenos Aires",
         "country": "Argentina",
         "is_final": true,

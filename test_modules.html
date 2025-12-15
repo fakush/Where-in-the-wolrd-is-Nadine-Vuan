@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Module Loading</title>
+</head>
+<body>
+    <h1>Module Loading Test</h1>
+    <div id="status">Testing...</div>
+
+    <script type="module">
+        const statusDiv = document.getElementById('status');
+        
+        try {
+            statusDiv.innerHTML = 'Loading GameController module...<br>';
+            
+            const { GameController } = await import('./src/modules/GameController.js');
+            statusDiv.innerHTML += '✓ GameController imported successfully<br>';
+            
+            const gameController = new GameController();
+            statusDiv.innerHTML += '✓ GameController instance created<br>';
+            
+            statusDiv.innerHTML += 'Initializing game...<br>';
+            await gameController.init();
+            statusDiv.innerHTML += '✓ Game initialized successfully<br>';
+            
+        } catch (error) {
+            statusDiv.innerHTML += `❌ Error: ${error.message}<br>`;
+            statusDiv.innerHTML += `Stack: ${error.stack}<br>`;
+            console.error('Module test failed:', error);
+        }
+    </script>
+</body>
+</html>

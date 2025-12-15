@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Validation Test - Nadine Vuan Game</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0f0f23;
+            color: #00ff41;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            background: rgba(0, 255, 65, 0.05);
+        }
+        
+        .test-button {
+            background: #00ff41;
+            color: #0f0f23;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .test-button:hover {
+            background: #00cc33;
+        }
+        
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 3px solid #00ff41;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .success { color: #00ff41; }
+        .error { color: #dc143c; }
+        .warning { color: #ffd700; }
+        .info { color: #007bff; }
+        
+        .game-frame {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #00ff41;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .stats-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(0, 255, 65, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 Browser Validation Test Suite</h1>
+    <p>Complete validation of the game running in a real browser environment.</p>
+
+    <div class="test-section">
+        <h2>🎮 Game Instance</h2>
+        <p>The actual game running in an iframe for testing:</p>
+        <iframe id="game-frame" class="game-frame" src="src/index.html"></iframe>
+        
+        <div class="stats-display">
+            <div class="stat-card">
+                <h4>Game Status</h4>
+                <div id="game-status">Loading...</div>
+            </div>
+            <div class="stat-card">
+                <h4>Test Results</h4>
+                <div id="test-summary">0 tests run</div>
+            </div>
+            <div class="stat-card">
+                <h4>Performance</h4>
+                <div id="performance-stats">Measuring...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Automated Browser Tests</h2>
+        <button class="test-button" onclick="runFullGameTest()">Run Full Game Test</button>
+        <button class="test-button" onclick="testUserInteractions()">Test User Interactions</button>
+        <button class="test-button" onclick="testAssetLoading()">Test Asset Loading</button>
+        <button class="test-button" onclick="testResponsiveness()">Test Responsiveness</button>
+        
+        <div id="browser-test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Performance Monitoring</h2>
+        <button class="test-button" onclick="measurePerformance()">Measure Performance</button>
+        <button class="test-button" onclick="testMemoryUsage()">Test Memory Usage</button>
+        <button class="test-button" onclick="stressTest()">Stress Test</button>
+        
+        <div id="performance-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔄 Cross-Browser Compatibility</h2>
+        <button class="test-button" onclick="testBrowserFeatures()">Test Browser Features</button>
+        <button class="test-button" onclick="testLocalStorage()">Test Local Storage</button>
+        <button class="test-button" onclick="testModuleSupport()">Test Module Support</button>
+        
+        <div id="compatibility-results"></div>
+    </div>
+
+    <script>
+        let testResults = { passed: 0, failed: 0, warnings: 0, total: 0 };
+        let gameWindow = null;
+
+        function log(message, type = 'info', elementId = 'browser-test-results') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            
+            element.innerHTML += `<div class="test-result ${className}">[${timestamp}] ${message}</div>`;
+            
+            testResults.total++;
+            if (type === 'success') testResults.passed++;
+            else if (type === 'error') testResults.failed++;
+            else if (type === 'warning') testResults.warnings++;
+            
+            updateTestSummary();
+        }
+
+        function updateTestSummary() {
+            const summary = document.getElementById('test-summary');
+            summary.innerHTML = `
+                ✅ ${testResults.passed} passed<br>
+                ❌ ${testResults.failed} failed<br>
+                ⚠️ ${testResults.warnings} warnings<br>
+                📊 ${testResults.total} total
+            `;
+        }
+
+        function updateGameStatus(status) {
+            document.getElementById('game-status').innerHTML = status;
+        }
+
+        // Monitor game frame loading
+        document.getElementById('game-frame').addEventListener('load', function() {
+            gameWindow = this.contentWindow;
+            updateGameStatus('Game loaded successfully');
+            
+            // Try to access game controller
+            setTimeout(() => {
+                try {
+                    if (gameWindow.gameController || gameWindow.GameController) {
+                        log('✅ Game controller accessible from iframe', 'success');
+                        updateGameStatus('Game controller ready');
+                    } else {
+                        log('⚠️ Game controller not immediately accessible', 'warning');
+                    }
+                } catch (error) {
+                    log(`❌ Cannot access game controller: ${error.message}`, 'error');
+                }
+            }, 2000);
+        });
+
+        // Full Game Test
+        async function runFullGameTest() {
+            log('🎮 Starting full game test...', 'info');
+            
+            if (!gameWindow) {
+                log('❌ Game window not available', 'error');
+                return;
+            }
+            
+            try {
+                // Test game initialization
+                const startButton = gameWindow.document.getElementById('start-game-btn');
+                if (startButton) {
+                    log('✅ Start button found', 'success');
+                    
+                    // Simulate click
+                    startButton.click();
+                    
+                    setTimeout(() => {
+                        // Check if game started
+                        const investigationScreen = gameWindow.document.getElementById('investigation-screen');
+                        if (investigationScreen && investigationScreen.classList.contains('active')) {
+                            log('✅ Game started successfully - investigation screen active', 'success');
+                            
+                            // Test clue collection
+                            testClueCollection();
+                        } else {
+                            log('❌ Game did not start properly', 'error');
+                        }
+                    }, 1000);
+                } else {
+                    log('❌ Start button not found', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Full game test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testClueCollection() {
+            try {
+                const clueButton = gameWindow.document.getElementById('collect-clues-btn');
+                if (clueButton && !clueButton.disabled) {
+                    log('✅ Clue collection button available', 'success');
+                    
+                    clueButton.click();
+                    
+                    setTimeout(() => {
+                        // Check if clues were collected
+                        const clueCount = gameWindow.document.getElementById('clues-collected-count');
+                        if (clueCount && parseInt(clueCount.textContent) > 0) {
+                            log('✅ Clues collected successfully', 'success');
+                            testTravelSystem();
+                        } else {
+                            log('⚠️ No clues collected or counter not updated', 'warning');
+                        }
+                    }, 500);
+                } else {
+                    log('⚠️ Clue collection not available (no clues in starting city)', 'warning');
+                    testTravelSystem();
+                }
+            } catch (error) {
+                log(`❌ Clue collection test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testTravelSystem() {
+            try {
+                const travelButton = gameWindow.document.getElementById('travel-btn');
+                if (travelButton) {
+                    log('✅ Travel button found', 'success');
+                    
+                    travelButton.click();
+                    
+                    setTimeout(() => {
+                        const travelScreen = gameWindow.document.getElementById('travel-screen');
+                        if (travelScreen && travelScreen.classList.contains('active')) {
+                            log('✅ Travel screen displayed', 'success');
+                            
+                            // Check for city markers
+                            const cityMarkers = gameWindow.document.querySelectorAll('.city-marker-button');
+                            if (cityMarkers.length > 0) {
+                                log(`✅ ${cityMarkers.length} travel destinations available`, 'success');
+                            } else {
+                                log('⚠️ No travel destinations found', 'warning');
+                            }
+                        } else {
+                            log('❌ Travel screen not displayed', 'error');
+                        }
+                    }, 500);
+                } else {
+                    log('❌ Travel button not found', 'error');
+                }
+            } catch (error) {
+                log(`❌ Travel system test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test User Interactions
+        function testUserInteractions() {
+            log('👆 Testing user interactions...', 'info');
+            
+            if (!gameWindow) {
+                log('❌ Game window not available', 'error');
+                return;
+            }
+            
+            try {
+                // Test button hover effects
+                const buttons = gameWindow.document.querySelectorAll('button');
+                log(`✅ Found ${buttons.length} interactive buttons`, 'success');
+                
+                // Test responsive elements
+                const gameContainer = gameWindow.document.getElementById('game-container');
+                if (gameContainer) {
+                    log('✅ Game container responsive structure found', 'success');
+                } else {
+                    log('❌ Game container not found', 'error');
+                }
+                
+                // Test screen transitions
+                const screens = gameWindow.document.querySelectorAll('.game-screen');
+                log(`✅ Found ${screens.length} game screens`, 'success');
+                
+            } catch (error) {
+                log(`❌ User interaction test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test Asset Loading
+        function testAssetLoading() {
+            log('🖼️ Testing asset loading...', 'info');
+            
+            if (!gameWindow) {
+                log('❌ Game window not available', 'error');
+                return;
+            }
+            
+            try {
+                // Test image loading
+                const images = gameWindow.document.querySelectorAll('img');
+                let loadedImages = 0;
+                let failedImages = 0;
+                
+                images.forEach(img => {
+                    if (img.complete && img.naturalWidth > 0) {
+                        loadedImages++;
+                    } else if (img.complete) {
+                        failedImages++;
+                    }
+                });
+                
+                log(`✅ ${loadedImages} images loaded successfully`, 'success');
+                if (failedImages > 0) {
+                    log(`⚠️ ${failedImages} images failed to load`, 'warning');
+                }
+                
+                // Test CSS loading
+                const stylesheets = gameWindow.document.querySelectorAll('link[rel="stylesheet"]');
+                log(`✅ ${stylesheets.length} stylesheets linked`, 'success');
+                
+            } catch (error) {
+                log(`❌ Asset loading test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test Responsiveness
+        function testResponsiveness() {
+            log('📱 Testing responsiveness...', 'info');
+            
+            if (!gameWindow) {
+                log('❌ Game window not available', 'error');
+                return;
+            }
+            
+            try {
+                const gameFrame = document.getElementById('game-frame');
+                const originalWidth = gameFrame.style.width;
+                
+                // Test mobile width
+                gameFrame.style.width = '375px';
+                setTimeout(() => {
+                    log('✅ Mobile width test completed', 'success');
+                    
+                    // Test tablet width
+                    gameFrame.style.width = '768px';
+                    setTimeout(() => {
+                        log('✅ Tablet width test completed', 'success');
+                        
+                        // Restore original width
+                        gameFrame.style.width = originalWidth;
+                        log('✅ Responsiveness test completed', 'success');
+                    }, 500);
+                }, 500);
+                
+            } catch (error) {
+                log(`❌ Responsiveness test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Performance Monitoring
+        function measurePerformance() {
+            log('⚡ Measuring performance...', 'info', 'performance-results');
+            
+            try {
+                const startTime = performance.now();
+                
+                // Measure frame loading time
+                const gameFrame = document.getElementById('game-frame');
+                gameFrame.addEventListener('load', function measureLoad() {
+                    const loadTime = performance.now() - startTime;
+                    log(`✅ Game loaded in ${loadTime.toFixed(2)}ms`, 'success', 'performance-results');
+                    
+                    // Update performance stats
+                    document.getElementById('performance-stats').innerHTML = `
+                        Load time: ${loadTime.toFixed(2)}ms<br>
+                        Memory: ${(performance.memory?.usedJSHeapSize / 1024 / 1024).toFixed(2) || 'N/A'}MB
+                    `;
+                    
+                    gameFrame.removeEventListener('load', measureLoad);
+                });
+                
+            } catch (error) {
+                log(`❌ Performance measurement failed: ${error.message}`, 'error', 'performance-results');
+            }
+        }
+
+        function testMemoryUsage() {
+            log('🧠 Testing memory usage...', 'info', 'performance-results');
+            
+            try {
+                if (performance.memory) {
+                    const memory = performance.memory;
+                    log(`✅ JS Heap Size: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`, 'success', 'performance-results');
+                    log(`✅ JS Heap Limit: ${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)}MB`, 'success', 'performance-results');
+                } else {
+                    log('⚠️ Memory API not available in this browser', 'warning', 'performance-results');
+                }
+            } catch (error) {
+                log(`❌ Memory test failed: ${error.message}`, 'error', 'performance-results');
+            }
+        }
+
+        function stressTest() {
+            log('🔥 Running stress test...', 'info', 'performance-results');
+            
+            try {
+                const iterations = 100;
+                const startTime = performance.now();
+                
+                // Simulate rapid interactions
+                for (let i = 0; i < iterations; i++) {
+                    setTimeout(() => {
+                        if (gameWindow) {
+                            // Simulate random button clicks
+                            const buttons = gameWindow.document.querySelectorAll('button:not(:disabled)');
+                            if (buttons.length > 0) {
+                                const randomButton = buttons[Math.floor(Math.random() * buttons.length)];
+                                // Don't actually click, just test selection
+                            }
+                        }
+                        
+                        if (i === iterations - 1) {
+                            const endTime = performance.now();
+                            log(`✅ Stress test completed: ${iterations} operations in ${(endTime - startTime).toFixed(2)}ms`, 'success', 'performance-results');
+                        }
+                    }, i * 10);
+                }
+                
+            } catch (error) {
+                log(`❌ Stress test failed: ${error.message}`, 'error', 'performance-results');
+            }
+        }
+
+        // Browser Compatibility Tests
+        function testBrowserFeatures() {
+            log('🌐 Testing browser features...', 'info', 'compatibility-results');
+            
+            try {
+                // Test ES6 modules
+                if (typeof import !== 'undefined') {
+                    log('✅ ES6 modules supported', 'success', 'compatibility-results');
+                } else {
+                    log('⚠️ ES6 modules not supported', 'warning', 'compatibility-results');
+                }
+                
+                // Test fetch API
+                if (typeof fetch !== 'undefined') {
+                    log('✅ Fetch API supported', 'success', 'compatibility-results');
+                } else {
+                    log('❌ Fetch API not supported', 'error', 'compatibility-results');
+                }
+                
+                // Test localStorage
+                if (typeof localStorage !== 'undefined') {
+                    log('✅ localStorage supported', 'success', 'compatibility-results');
+                } else {
+                    log('❌ localStorage not supported', 'error', 'compatibility-results');
+                }
+                
+                // Test CSS Grid
+                if (CSS.supports('display', 'grid')) {
+                    log('✅ CSS Grid supported', 'success', 'compatibility-results');
+                } else {
+                    log('⚠️ CSS Grid not supported', 'warning', 'compatibility-results');
+                }
+                
+            } catch (error) {
+                log(`❌ Browser feature test failed: ${error.message}`, 'error', 'compatibility-results');
+            }
+        }
+
+        function testLocalStorage() {
+            log('💾 Testing localStorage functionality...', 'info', 'compatibility-results');
+            
+            try {
+                const testKey = 'nadine-vuan-test';
+                const testValue = { test: true, timestamp: Date.now() };
+                
+                // Test write
+                localStorage.setItem(testKey, JSON.stringify(testValue));
+                log('✅ localStorage write successful', 'success', 'compatibility-results');
+                
+                // Test read
+                const retrieved = JSON.parse(localStorage.getItem(testKey));
+                if (retrieved && retrieved.test === true) {
+                    log('✅ localStorage read successful', 'success', 'compatibility-results');
+                } else {
+                    log('❌ localStorage read failed', 'error', 'compatibility-results');
+                }
+                
+                // Test delete
+                localStorage.removeItem(testKey);
+                if (!localStorage.getItem(testKey)) {
+                    log('✅ localStorage delete successful', 'success', 'compatibility-results');
+                } else {
+                    log('❌ localStorage delete failed', 'error', 'compatibility-results');
+                }
+                
+            } catch (error) {
+                log(`❌ localStorage test failed: ${error.message}`, 'error', 'compatibility-results');
+            }
+        }
+
+        function testModuleSupport() {
+            log('📦 Testing module support...', 'info', 'compatibility-results');
+            
+            try {
+                // Check if the game loaded with modules
+                if (gameWindow) {
+                    setTimeout(() => {
+                        try {
+                            // Try to access module-loaded content
+                            const moduleScript = gameWindow.document.querySelector('script[type="module"]');
+                            if (moduleScript) {
+                                log('✅ ES6 modules loaded successfully', 'success', 'compatibility-results');
+                            } else {
+                                log('⚠️ No module scripts found', 'warning', 'compatibility-results');
+                            }
+                            
+                            // Check for fallback script
+                            const fallbackScript = gameWindow.document.querySelector('script[nomodule]');
+                            if (fallbackScript) {
+                                log('✅ Fallback script available for older browsers', 'success', 'compatibility-results');
+                            }
+                            
+                        } catch (error) {
+                            log(`❌ Module support test failed: ${error.message}`, 'error', 'compatibility-results');
+                        }
+                    }, 1000);
+                } else {
+                    log('❌ Game window not available for module testing', 'error', 'compatibility-results');
+                }
+                
+            } catch (error) {
+                log(`❌ Module support test failed: ${error.message}`, 'error', 'compatibility-results');
+            }
+        }
+
+        // Auto-start basic tests
+        window.addEventListener('load', () => {
+            log('🌐 Browser validation test suite loaded', 'info');
+            updateGameStatus('Loading game...');
+            
+            // Auto-run compatibility tests
+            setTimeout(() => {
+                testBrowserFeatures();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

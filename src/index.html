@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Where in the World is Nadine Vuan? - Interactive detective adventure game">
+    <title>Where in the World is Nadine Vuan?</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+    <!-- Game Container -->
+    <div id="game-container">
+        
+        <!-- Intro Screen -->
+        <section id="intro-screen" class="game-screen active">
+            <div class="detective-badge">🕵️</div>
+            <div class="intro-content fade-in">
+                <img id="game-cover" src="../assets/scenes/portada_juego.png" alt="Game Cover" class="cover-image">
+                <div class="character-intro detective-entrance">
+                    <img id="steve-portrait" src="../assets/scenes/steve.png" alt="Steve Character" class="character-portrait">
+                    <div class="intro-text">
+                        <h1>Where in the World is Nadine Vuan?</h1>
+                        <p class="story-text retro-text">You are Steve, a job candidate at Caylent. Your mission: track down Nadine Vuan, the Talent Recruiter, across 11 global cities by following clues from local informants.</p>
+                        <button id="start-game-btn" class="detective-button">
+                            <i class="fas fa-play"></i> Start Investigation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Investigation Screen -->
+        <section id="investigation-screen" class="game-screen">
+            <header class="game-header">
+                <h2 id="current-city-name">
+                    <i class="fas fa-map-marker-alt"></i> City Name
+                </h2>
+                <div class="game-stats">
+                    <span id="cities-visited-count">
+                        <i class="fas fa-globe-americas"></i> Cities: 0
+                    </span>
+                    <span id="clues-collected-count">
+                        <i class="fas fa-puzzle-piece"></i> Clues: 0
+                    </span>
+                    <span id="progress-indicator" class="progress-indicator">
+                        <i class="fas fa-chart-line"></i> Progress: 0%
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </span>
+                </div>
+            </header>
+            
+            <main class="investigation-content slide-in">
+                <div class="scene-container evidence-tape">
+                    <img id="city-scene" src="" alt="City Scene" class="scene-image">
+                </div>
+                
+                <div class="informant-dialogue case-file">
+                    <div id="informant-message" class="dialogue-box">
+                        <span class="evidence-marker">Informant</span>
+                        <p id="dialogue-text" class="retro-text">Informant dialogue will appear here...</p>
+                    </div>
+                </div>
+                
+                <div class="action-buttons investigation-grid">
+                    <button id="collect-clues-btn" class="action-button">
+                        <i class="fas fa-search"></i> Collect Clues
+                        <div class="button-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </button>
+                    <button id="travel-btn" class="action-button">
+                        <i class="fas fa-plane"></i> Travel
+                    </button>
+                    <button id="view-clues-btn" class="secondary-button">
+                        <i class="fas fa-clipboard-list"></i> View Evidence
+                    </button>
+                </div>
+            </main>
+        </section>
+
+        <!-- Travel Screen -->
+        <section id="travel-screen" class="game-screen">
+            <header class="game-header">
+                <h2>🌍 Choose Your Destination</h2>
+                <button id="back-to-investigation-btn" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Investigation
+                </button>
+            </header>
+            
+            <main class="travel-content fade-in">
+                <div class="world-map-container travel-zoom"></div>
+                    <img id="world-map" src="../assets/scenes/world_map.png" alt="World Map" class="world-map">
+                    <div id="city-markers" class="city-markers">
+                        <!-- City selection buttons will be dynamically added here -->
+                    </div>
+                </div>
+            </main>
+        </section>
+
+        <!-- Clues Screen -->
+        <section id="clues-screen" class="game-screen">
+            <header class="game-header">
+                <h2>🔍 Evidence Board</h2>
+                <button id="close-clues-btn" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Investigation
+                </button>
+            </header>
+            
+            <main class="clues-content fade-in">
+                <div id="clues-list" class="clues-container clue-reveal">
+                    <p class="no-clues-message">No evidence collected yet. Start investigating cities to gather clues!</p>
+                </div>
+            </main>
+        </section>
+
+        <!-- Final Encounter Screen -->
+        <section id="final-encounter-screen" class="game-screen">
+            <div class="encounter-content fade-in">
+                <div class="character-dialogue detective-entrance">
+                    <img id="nadine-portrait" src="../assets/scenes/steve.png" alt="Nadine Vuan" class="character-portrait">
+                    <div class="dialogue-container">
+                        <h2>🎉 Case Closed!</h2>
+                        <div id="victory-dialogue" class="dialogue-box case-file">
+                            <span class="evidence-marker">Victory</span>
+                            <p class="retro-text">Congratulations, Detective! You found Nadine Vuan in Buenos Aires!</p>
+                        </div>
+                        <div class="final-actions">
+                            <button id="restart-game-btn" class="detective-button">🔄 New Case</button>
+                            <button id="exit-game-btn" class="secondary-button">📁 Close File</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Over Screen -->
+        <section id="game-over-screen" class="game-screen">
+            <div class="game-over-content fade-in">
+                <h2>🚫 Case Unsolved</h2>
+                <div id="game-over-message" class="message-box case-file">
+                    <span class="evidence-marker">Status</span>
+                    <p class="retro-text">The trail has gone cold, detective. Better luck next time!</p>
+                </div>
+                <div class="game-over-actions">
+                    <button id="restart-from-failure-btn" class="detective-button">🔄 Reopen Case</button>
+                    <button id="exit-from-failure-btn" class="secondary-button">📁 Archive Case</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Screen -->
+        <section id="loading-screen" class="game-screen">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <p>Analyzing Evidence...</p>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Include JavaScript -->
+    <script type="module" src="game_modular.js"></script>
+    <!-- Fallback for non-module browsers -->
+    <script nomodule src="game.js"></script>
+</body>
+</html>
