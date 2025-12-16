@@ -200,14 +200,17 @@ export class UIManager {
 
             if (cityData && cityData.is_final) {
                 // Buenos Aires - final destination
+                this.elements.collectCluesBtn.disabled = false;
                 const buttonText = translationService.translate('ui.buttons.find_nadine', {}, 'Find Nadine');
                 this.elements.collectCluesBtn.innerHTML = `<i class="fas fa-user-check"></i> ${buttonText}`;
             } else if (hasClues) {
-                // City has clues
+                // City has clues - enable button
+                this.elements.collectCluesBtn.disabled = false;
                 const buttonText = translationService.translate('ui.buttons.collect_clues', {}, 'Collect Clues');
                 this.elements.collectCluesBtn.innerHTML = `<i class="fas fa-search"></i> ${buttonText}`;
             } else {
-                // No clues in this city
+                // No clues in this city - disable button
+                this.elements.collectCluesBtn.disabled = true;
                 const buttonText = translationService.translate('ui.buttons.no_clues_here', {}, 'No Clues Here');
                 this.elements.collectCluesBtn.innerHTML = `<i class="fas fa-times"></i> ${buttonText}`;
             }
@@ -545,7 +548,7 @@ export class UIManager {
             'tokyo': { left: '87%', top: '45%' },            // Far right, clear space
             'roma': { left: '48%', top: '45%' },             // Central Europe, moved up
             'marruecos': { left: '36%', top: '50%' },        // North Africa, clear space
-            'london': { left: '46%', top: '32%' },           // Northern Europe, well separated
+            'london': { left: '41%', top: '35%' },           // Northern Europe, well separated
             'reykjavik': { left: '32%', top: '26%' },        // Far north, isolated
             'mexico': { left: '12%', top: '56%' },           // Central America, moved left
             'sydney': { left: '80%', top: '82%' },           // Far southeast, isolated
@@ -1012,6 +1015,15 @@ export class UIManager {
     resetTravelButton() {
         if (this.elements.travelBtn) {
             this.elements.travelBtn.disabled = false;
+            // Use centralized button translation method
+            this.updateButtonTranslations();
+        }
+    }
+
+    // Reset collect clues button to normal state
+    resetCollectCluesButton() {
+        if (this.elements.collectCluesBtn) {
+            this.elements.collectCluesBtn.disabled = false;
             // Use centralized button translation method
             this.updateButtonTranslations();
         }

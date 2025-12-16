@@ -873,6 +873,8 @@ export class GameController {
         this.uiManager.showWorldMap();
         // Ensure travel button is in correct state
         this.uiManager.resetTravelButton();
+        // Ensure collect clues button is in correct state for when player returns
+        this.uiManager.resetCollectCluesButton();
     }
 
     // Travel to selected city with guess validation and scoring
@@ -1097,6 +1099,8 @@ export class GameController {
             this.uiManager.showWorldMap();
             // Reset travel button state
             this.uiManager.resetTravelButton();
+            // Reset collect clues button state for when player returns to investigation
+            this.uiManager.resetCollectCluesButton();
         }, 3000);
         
         this.gameState.saveGameState();
