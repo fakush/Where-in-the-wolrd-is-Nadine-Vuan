@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Generation Debug</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .warning { color: #ff0; }
+        pre {
+            background: #111;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Route Generation Debug</h1>
+    
+    <div class="section">
+        <h2>Game Data Analysis</h2>
+        <div id="data-analysis"></div>
+    </div>
+
+    <div class="section">
+        <h2>Route Generation Test</h2>
+        <div id="route-test"></div>
+    </div>
+
+    <div class="section">
+        <h2>Console Output</h2>
+        <pre id="console-output"></pre>
+    </div>
+
+    <script type="module">
+        // Capture console output
+        const consoleOutput = document.getElementById('console-output');
+        const originalConsole = {
+            log: console.log,
+            warn: console.warn,
+            error: console.error
+        };
+
+        function addToConsole(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            consoleOutput.textContent += `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = (...args) => {
+            originalConsole.log(...args);
+            addToConsole('log', args.join(' '));
+        };
+
+        console.warn = (...args) => {
+            originalConsole.warn(...args);
+            addToConsole('warn', args.join(' '));
+        };
+
+        console.error = (...args) => {
+            originalConsole.error(...args);
+            addToConsole('error', args.join(' '));
+        };
+
+        async function runDebug() {
+            try {
+                // Load game data
+                console.log('Loading game data...');
+                const response = await fetch('assets/data/game_data.json');
+                const gameData = await response.json();
+                
+                // Analyze data structure
+                const cities = gameData.game_data.cities;
+                const buenosAires = cities.find(city => city.is_final === true);
+                const regularCities = cities.filter(city => city.is_final !== true);
+                
+                const dataAnalysis = document.getElementById('data-analysis');
+                dataAnalysis.innerHTML = `
+                    <p class="success">✅ Total cities: ${cities.length}</p>
+                    <p class="success">✅ Regular cities: ${regularCities.length}</p>
+                    <p class="success">✅ Buenos Aires found: ${buenosAires ? buenosAires.name : 'NOT FOUND'}</p>
+                    <h3>City IDs:</h3>
+                    <pre>${cities.map(c => `${c.id} (${c.name}) ${c.is_final ? '[FINAL]' : ''}`).join('\n')}</pre>
+                `;
+
+                // Test simple route generation
+                console.log('Testing simple route generation...');
+                
+                function testSimpleRouteGeneration() {
+                    if (regularCities.length < 4) {
+                        return { success: false, error: 'Not enough regular cities' };
+                    }
+                    
+                    if (!buenosAires) {
+                        return { success: false, error: 'Buenos Aires not found' };
+                    }
+                    
+                    // Simple selection - first 4 cities
+                    const selectedCities = regularCities.slice(0, 4);
+                    const route = selectedCities.map(city => city.id);
+                    route.push(buenosAires.id);
+                    
+                    return { 
+                        success: true, 
+                        route: route,
+                        cityNames: selectedCities.map(c => c.name).concat([buenosAires.name])
+                    };
+                }
+                
+                const simpleTest = testSimpleRouteGeneration();
+                
+                // Test RandomizationSystem
+                console.log('Testing RandomizationSystem...');
+                
+                // Import and test the RandomizationSystem
+                const { RandomizationSystem } = await import('./modules/RandomizationSystem.js');
+                const randomSystem = new RandomizationSystem({});
+                randomSystem.initialize();
+                
+                const balancedSelection = randomSystem.balancedRandomSelection(regularCities, 4, {
+                    ensureUniqueness: true,
+                    avoidRecentSelections: true
+                });
+                
+                console.log('Balanced selection result:', balancedSelection);
+                
+                const routeTest = document.getElementById('route-test');
+                routeTest.innerHTML = `
+                    <h3>Simple Route Generation:</h3>
+                    <p class="${simpleTest.success ? 'success' : 'error'}">
+                        ${simpleTest.success ? '✅' : '❌'} ${simpleTest.success ? 'SUCCESS' : simpleTest.error}
+                    </p>
+                    ${simpleTest.success ? `
+                        <pre>Route: ${simpleTest.route.join(' → ')}</pre>
+                        <pre>Cities: ${simpleTest.cityNames.join(' → ')}</pre>
+                    ` : ''}
+                    
+                    <h3>RandomizationSystem Test:</h3>
+                    <p class="${balancedSelection.length === 4 ? 'success' : 'error'}">
+                        ${balancedSelection.length === 4 ? '✅' : '❌'} 
+                        Balanced selection: ${balancedSelection.length} cities selected
+                    </p>
+                    ${balancedSelection.length > 0 ? `
+                        <pre>Selected: ${balancedSelection.map(c => c.id).join(', ')}</pre>
+                    ` : ''}
+                `;
+
+                // Test full GameState route generation
+                console.log('Testing GameState route generation...');
+                
+                const { GameState } = await import('./modules/GameState.js');
+                const gameState = new GameState();
+                
+                const generatedRoute = gameState.generateCityRoute(gameData.game_data, randomSystem);
+                console.log('GameState generated route:', generatedRoute);
+                
+                routeTest.innerHTML += `
+                    <h3>GameState Route Generation:</h3>
+                    <p class="${generatedRoute.length === 5 ? 'success' : 'error'}">
+                        ${generatedRoute.length === 5 ? '✅' : '❌'} 
+                        GameState route: ${generatedRoute.length} cities
+                    </p>
+                    ${generatedRoute.length > 0 ? `
+                        <pre>Generated route: ${generatedRoute.join(' → ')}</pre>
+                    ` : ''}
+                `;
+
+            } catch (error) {
+                console.error('Debug failed:', error);
+                document.getElementById('route-test').innerHTML = `
+                    <p class="error">❌ Debug failed: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Run debug when page loads
+        runDebug();
+    </script>
+</body>
+</html>
+</text>
+</invoke>

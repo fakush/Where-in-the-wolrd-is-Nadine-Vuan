@@ -1,0 +1,384 @@
+{
+  "metadata": {
+    "language": "es",
+    "version": "1.0",
+    "lastUpdated": "2024-12-16"
+  },
+  "game_data": {
+    "title": "¿Dónde en el Mundo está Nadine Vuan?",
+    "version": "1.0",
+    "cities": [
+      {
+        "id": "tokyo",
+        "name": "Tokio",
+        "country": "Japón",
+        "is_final": false,
+        "informant": {
+          "name": "Hiroshi",
+          "greeting": "Konnichiwa. Bienvenido a Tokio. ¿Buscas a alguien?",
+          "farewell_helpful": "Buena suerte en tu búsqueda. Ganbatte!",
+          "farewell_unhelpful": "Lo siento, no puedo ayudarte. Sayonara."
+        },
+        "clues": {
+          "difficult": [
+            "Mencionó algo sobre la puntualidad extrema del transporte",
+            "Comentó sobre jardines zen en medio del caos urbano",
+            "Habló de máquinas expendedoras en cada esquina"
+          ],
+          "medium": [
+            "Vi que comía sushi para el desayuno",
+            "Mencionó los trenes bala súper rápidos",
+            "Habló de cerezos, aunque no era temporada"
+          ],
+          "easy": [
+            "Estaba comiendo ramen con palillos",
+            "Compró un abanico con kanji",
+            "Mencionó anime y manga"
+          ]
+        },
+        "not_here_response": "No, no he visto a esa mujer por aquí. Tal vez en otra ciudad."
+      },
+      {
+        "id": "roma",
+        "name": "Roma",
+        "country": "Italia",
+        "is_final": false,
+        "informant": {
+          "name": "Giulia",
+          "greeting": "Ciao! Benvenuto a Roma. Come posso aiutarti?",
+          "farewell_helpful": "In bocca al lupo! Que la encuentres pronto.",
+          "farewell_unhelpful": "Mi dispiace, no sé nada. Arrivederci."
+        },
+        "clues": {
+          "difficult": [
+            "Habló de cómo los adoquines lastiman los pies",
+            "Estaba buscando la mejor suppli del Trastevere",
+            "Mencionó las catacumbas subterráneas"
+          ],
+          "medium": [
+            "Estaba comiendo pasta carbonara auténtica",
+            "Tiró una moneda en una fuente famosa",
+            "Habló de la Capilla Sixtina y Miguel Ángel"
+          ],
+          "easy": [
+            "Comía pizza y pasta todo el tiempo",
+            "Mencionó el Coliseo y los gladiadores",
+            "Estaba frente a la Fontana di Trevi"
+          ]
+        },
+        "not_here_response": "No, quella donna non è passata di qui. Prova altrove."
+      },
+      {
+        "id": "marruecos",
+        "name": "Marrakech",
+        "country": "Marruecos",
+        "is_final": false,
+        "informant": {
+          "name": "Omar",
+          "greeting": "As-salamu alaykum. Bienvenido a Marrakech. ¿En qué puedo ayudarte?",
+          "farewell_helpful": "Que Alá te guíe en tu búsqueda. Bslama.",
+          "farewell_unhelpful": "Lo siento, no la he visto. Bslama."
+        },
+        "clues": {
+          "difficult": [
+            "Dijo que se perdió en el laberinto de la medina",
+            "Mencionó la plaza Jemaa el-Fna y los encantadores de serpientes",
+            "Compró aceite de argán directamente de las cooperativas"
+          ],
+          "medium": [
+            "Estaba regateando en los zocos tradicionales",
+            "Probó té de menta muy dulce",
+            "Vi que comía tajine de cordero con ciruelas"
+          ],
+          "easy": [
+            "Estaba en un mercado lleno de alfombras y lámparas",
+            "Vi que tomaba té de menta en vasos decorados",
+            "Compró especias coloridas en sacos"
+          ]
+        },
+        "not_here_response": "No, esa mujer no ha estado en nuestro zoco. Quizás en otro lugar."
+      },
+      {
+        "id": "london",
+        "name": "Londres",
+        "country": "Inglaterra",
+        "is_final": false,
+        "informant": {
+          "name": "Nigel",
+          "greeting": "Good afternoon. Bienvenido a Londres. ¿En qué puedo ayudarte?",
+          "farewell_helpful": "Cheerio! Buena suerte, amigo.",
+          "farewell_unhelpful": "Terribly sorry, no puedo ayudarte. Good day."
+        },
+        "clues": {
+          "difficult": [
+            "Habló de un mercado de antigüedades en Portobello",
+            "Dijo que vio Queen en el West End... el musical",
+            "Mencionó los pubs históricos donde escribían los poetas"
+          ],
+          "medium": [
+            "Estaba tomando té de las 5 con scones",
+            "Compró un paraguas porque llueve mucho",
+            "Mencionó el Big Ben y el Parlamento"
+          ],
+          "easy": [
+            "Vi que tomaba té con leche constantemente",
+            "Mencionó a Queen Elizabeth y la realeza británica",
+            "Mencionó a Queen (la banda) y los Beatles"
+          ]
+        },
+        "not_here_response": "Me temo que no he visto a esa mujer por aquí. Tal vez prueba en otro lugar."
+      },
+      {
+        "id": "reykjavik",
+        "name": "Reykjavik",
+        "country": "Islandia",
+        "is_final": false,
+        "informant": {
+          "name": "Sigrid",
+          "greeting": "Halló! Velkomin til Reykjavíkur. ¿Puedo ayudarte?",
+          "farewell_helpful": "Gangi þér vel! Que tengas suerte.",
+          "farewell_unhelpful": "Því miður, no la he visto. Bless."
+        },
+        "clues": {
+          "difficult": [
+            "Habló de la dorsal mesoatlántica visible",
+            "Dijo que probó el tiburón fermentado y se arrepintió",
+            "Mencionó el sol de medianoche en verano"
+          ],
+          "medium": [
+            "Estaba en la Laguna Azul con aguas termales",
+            "Mencionó géiseres que erupcionan cada 10 minutos",
+            "Vi que buscaba auroras boreales"
+          ],
+          "easy": [
+            "Estaba buscando ver auroras boreales de noche",
+            "Mencionó hielo, volcanes y aguas termales",
+            "Mencionó vikingos e historias nórdicas"
+          ]
+        },
+        "not_here_response": "Nei, esa mujer no ha estado aquí. Tal vez en otro país."
+      },
+      {
+        "id": "mexico",
+        "name": "Ciudad de México",
+        "country": "México",
+        "is_final": false,
+        "informant": {
+          "name": "Carlos",
+          "greeting": "¡Qué onda! Bienvenido al DF. ¿Qué buscas, güey?",
+          "farewell_helpful": "¡Órale! Suerte en tu búsqueda, carnal.",
+          "farewell_unhelpful": "Nel, no la he visto. Suerte, compa."
+        },
+        "clues": {
+          "difficult": [
+            "Mencionó los axolotes del lago de Xochimilco",
+            "Dijo que visitó la Casa Azul de Frida Kahlo",
+            "Habló del smog y la altura de 2,240 metros"
+          ],
+          "medium": [
+            "Estaba comiendo tacos al pastor en un puesto callejero",
+            "Mencionó las pirámides de Teotihuacán cercanas",
+            "Vi que compró una máscara de lucha libre"
+          ],
+          "easy": [
+            "Vi que comía tacos todo el día",
+            "Mencionó pirámides aztecas antiguas",
+            "Mencionó Frida Kahlo y Diego Rivera"
+          ]
+        },
+        "not_here_response": "No, esa chava no ha pasado por aquí. A lo mejor en otra ciudad."
+      },
+      {
+        "id": "sydney",
+        "name": "Sídney",
+        "country": "Australia",
+        "is_final": false,
+        "informant": {
+          "name": "Jake",
+          "greeting": "G'day mate! Bienvenido a Sydney. ¿En qué puedo ayudarte?",
+          "farewell_helpful": "Good on ya! Espero que la encuentres, mate.",
+          "farewell_unhelpful": "Nah, no la he visto. No worries, mate."
+        },
+        "clues": {
+          "difficult": [
+            "Mencionó que caminó el Bondi to Coogee coastal walk",
+            "Habló de los aborígenes y el arte rupestre",
+            "Habló de los ibis urbanos que están en todas partes"
+          ],
+          "medium": [
+            "Estaba en la playa Bondi con tabla de surf",
+            "Mencionó la Ópera House con sus velas blancas",
+            "Vi que buscaba koalas en un santuario"
+          ],
+          "easy": [
+            "Vi que estaba en una playa haciendo surf",
+            "Mencionó canguros y koalas",
+            "Habló de la Ópera House famosa"
+          ]
+        },
+        "not_here_response": "Nah mate, no he visto a esa mujer por aquí. Prueba en otra ciudad."
+      },
+      {
+        "id": "estambul",
+        "name": "Estambul",
+        "country": "Turquía",
+        "is_final": false,
+        "informant": {
+          "name": "Mehmet",
+          "greeting": "Merhaba! Hoş geldiniz Istanbul'a. ¿Cómo puedo ayudarte?",
+          "farewell_helpful": "İyi şanslar! Que la encuentres pronto.",
+          "farewell_unhelpful": "Üzgünüm, no la he visto. Hoşça kal."
+        },
+        "clues": {
+          "difficult": [
+            "Mencionó la cisterna basílica subterránea",
+            "Habló de la transición de Bizancio a Constantinopla",
+            "Mencionó los dervishes giratorios sufi"
+          ],
+          "medium": [
+            "Estaba navegando el Bósforo entre Europa y Asia",
+            "Mencionó la Mezquita Azul y sus minaretes",
+            "Estaba regateando en el Gran Bazar cubierto"
+          ],
+          "easy": [
+            "Vi que cruzaba un puente entre dos continentes",
+            "Mencionó mezquitas con cúpulas grandes",
+            "Habló de estar en Europa y Asia al mismo tiempo"
+          ]
+        },
+        "not_here_response": "Hayır, esa mujer no ha estado aquí. Prueba en otra ciudad."
+      },
+      {
+        "id": "bangkok",
+        "name": "Bangkok",
+        "country": "Tailandia",
+        "is_final": false,
+        "informant": {
+          "name": "Siriporn",
+          "greeting": "Sawasdee ka! Bienvenido a Bangkok. ¿Cómo puedo ayudarte?",
+          "farewell_helpful": "Chok dee ka! Buena suerte encontrándola.",
+          "farewell_unhelpful": "Khot thot ka, no la he visto. Adiós."
+        },
+        "clues": {
+          "difficult": [
+            "Mencionó los khlongs (canales) y casas sobre el agua",
+            "Habló de Jim Thompson y la casa de la seda",
+            "Habló del tráfico imposible y los tuk-tuks por todas partes"
+          ],
+          "medium": [
+            "Estaba en el templo del Buda Reclinado descalza",
+            "Mencionó mercados flotantes en los canales",
+            "Vi que comía pad thai en un puesto callejero"
+          ],
+          "easy": [
+            "Vi que comía pad thai con palillos",
+            "Mencionó templos budistas dorados",
+            "Estaba en un tuk-tuk motorizado"
+          ]
+        },
+        "not_here_response": "Mai chai ka, esa mujer no ha estado aquí. Prueba en otro lugar."
+      },
+      {
+        "id": "newYork",
+        "name": "Nueva York",
+        "country": "Estados Unidos",
+        "is_final": false,
+        "informant": {
+          "name": "Marcus",
+          "greeting": "Yo! Bienvenido a Nueva York. ¿Qué necesitas?",
+          "farewell_helpful": "Aight, buena suerte encontrándola. Peace!",
+          "farewell_unhelpful": "Nah man, no la he visto. Later."
+        },
+        "clues": {
+          "difficult": [
+            "Mencionó los brownstones de Brooklyn Heights",
+            "Habló de la High Line y Chelsea Market",
+            "Habló de los subway rats y el metro 24/7"
+          ],
+          "medium": [
+            "Estaba corriendo en Central Park",
+            "Mencionó Times Square con luces de neón",
+            "Vi que comía pizza estilo Nueva York (por porción)"
+          ],
+          "easy": [
+            "Vi que comía hot dogs de un carrito",
+            "Mencionó rascacielos gigantes",
+            "Estaba en Times Square con carteles luminosos"
+          ]
+        },
+        "not_here_response": "Nah bro, esa mujer no ha estado aquí. Prueba en otro lugar."
+      },
+      {
+        "id": "buenosAires",
+        "name": "Buenos Aires",
+        "country": "Argentina",
+        "is_final": true,
+        "informant": {
+          "name": "Diego",
+          "greeting": "¡Che, boludo! Bienvenido a Buenos Aires. ¿Qué necesitás?",
+          "farewell_helpful": "¡Dale, boludo! Seguí buscando nomás.",
+          "farewell_unhelpful": "No, che, no la vi. Probá en otro lado."
+        },
+        "clues": {
+          "difficult": [
+            "Mencionó los pasajes parisinos escondidos en Palermo",
+            "Habló de comprar libros en El Ateneo Grand Splendid",
+            "Dijo que fue a una milonga tradicional en Boedo"
+          ],
+          "medium": [
+            "Estaba aprendiendo tango en San Telmo",
+            "Mencionó el Obelisco en la Avenida 9 de Julio",
+            "Vi que comía asado con chimichurri"
+          ],
+          "easy": [
+            "Vi que bailaba tango apasionadamente",
+            "Mencionó el fútbol y Maradona",
+            "Estaba tomando mate con una bombilla"
+          ]
+        },
+        "not_here_response": "No, chabon, esa mina no estuvo por acá.",
+        "final_encounter": {
+          "nadine_speech": "Steve, llegaste hasta el fin del viaje... literalmente. Buenos Aires no solo es mi ciudad favorita, es donde Caylent está buscando un nuevo talento. Buscaba a alguien que no se rindiera, que siguiera las pistas sin importar cuán lejos lo llevaran. Alguien con la pasión por descubrir que tienen los verdaderos viajeros. ¿Estás listo para tu primera asignación?",
+          "steve_response": "¡Por supuesto! Ha sido un viaje increíble siguiéndote.",
+          "victory_message": "¡Felicidades! Has encontrado a Nadine Vuan y has ganado el puesto en Caylent. Tu aventura apenas comienza..."
+        }
+      }
+    ],
+    "game_messages": {
+      "intro": {
+        "title": "¡Bienvenido, Steve!",
+        "text": "Soy el jefe de recursos humanos de Caylent. Para tu proceso de selección, necesitas demostrar tus habilidades de investigación y resolución de problemas. Nadine Vuan, nuestra talent recruiter, está paseando por el mundo. Tu misión: encontrarla. Habla con informantes en cada ciudad, sigue las pistas, y demuéstranos que tienes lo que se necesita para trabajar con nosotros. ¡Buena suerte!"
+      },
+      "tutorial": {
+        "step1": "Cada ciudad tiene un informante que puede darte pistas sobre dónde fue Nadine.",
+        "step2": "Elige sabiamente tu próximo destino basándote en las pistas.",
+        "step3": "Si eliges la ciudad correcta, recibirás nuevas pistas. Si te equivocas, perderás tiempo valioso.",
+        "step4": "Nadine siempre está un paso adelante. ¡Persevera hasta encontrarla!"
+      },
+      "correct_city": "¡Correcto! Nadine estuvo aquí. El informante tiene información para ti.",
+      "wrong_city": "Ups... Nadine no ha estado en esta ciudad. Intenta con otra.",
+      "game_over_time": "Se acabó el tiempo. Nadine ha desaparecido de nuevo. ¿Quieres intentarlo otra vez?",
+      "game_over_attempts": "Has agotado tus intentos. ¿Quieres volver a intentarlo?",
+      "restart_prompt": "¿Quieres comenzar una nueva búsqueda?"
+    },
+    "ui_text": {
+      "buttons": {
+        "start_game": "Comenzar Búsqueda",
+        "select_city": "Viajar a esta Ciudad",
+        "view_clues": "Ver Pistas",
+        "restart": "Nueva Búsqueda",
+        "continue": "Continuar",
+        "back": "Volver",
+        "quit": "Salir"
+      },
+      "labels": {
+        "current_location": "Ubicación Actual",
+        "clues_collected": "Pistas Recolectadas",
+        "cities_visited": "Ciudades Visitadas",
+        "attempts_remaining": "Intentos Restantes",
+        "time_elapsed": "Tiempo Transcurrido",
+        "choose_destination": "Elige tu próximo destino"
+      }
+    }
+  }
+}

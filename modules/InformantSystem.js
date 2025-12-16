@@ -4,9 +4,10 @@
  */
 
 export class InformantSystem {
-    constructor(gameState, clueSystem = null) {
+    constructor(gameState, clueSystem = null, translationService = null) {
         this.gameState = gameState;
         this.clueSystem = clueSystem;
+        this.translationService = translationService;
         
         // Track dialogue state for each city
         this.dialogueState = new Map(); // cityId -> dialogue progression
@@ -94,12 +95,36 @@ export class InformantSystem {
 
     // Generate contextual greeting additions
     generateContextualGreeting(cityData) {
-        const greetingVariations = [
-            "Yes, I remember someone matching that description!",
-            "I saw someone like that recently. Let me tell you what I observed...",
-            "That person you're looking for - yes, she was here!",
-            "I have information about the person you seek."
-        ];
+        // Check current language and use appropriate translations
+        let greetingVariations;
+
+        if (this.translationService) {
+            const currentLanguage = this.translationService.localizationManager.getCurrentLanguage();
+
+            if (currentLanguage === 'es') {
+                greetingVariations = [
+                    "¡Sí, recuerdo a alguien que coincide con esa descripción!",
+                    "Vi a alguien así recientemente. Déjame contarte lo que observé...",
+                    "¡La persona que buscas - sí, estuvo aquí!",
+                    "Tengo información sobre la persona que buscas."
+                ];
+            } else {
+                greetingVariations = [
+                    "Yes, I remember someone matching that description!",
+                    "I saw someone like that recently. Let me tell you what I observed...",
+                    "That person you're looking for - yes, she was here!",
+                    "I have information about the person you seek."
+                ];
+            }
+        } else {
+            // Fallback to English
+            greetingVariations = [
+                "Yes, I remember someone matching that description!",
+                "I saw someone like that recently. Let me tell you what I observed...",
+                "That person you're looking for - yes, she was here!",
+                "I have information about the person you seek."
+            ];
+        }
         
         const randomIndex = Math.floor(Math.random() * greetingVariations.length);
         return greetingVariations[randomIndex];
@@ -121,23 +146,68 @@ export class InformantSystem {
 
     // Generate encouragement based on clue difficulty
     generateEncouragementByDifficulty(difficulty) {
-        const encouragements = {
-            'difficult': [
-                "That was a challenging clue - you're thinking like a true detective!",
-                "Excellent deduction skills! That clue should lead you in the right direction.",
-                "Impressive! You understood that complex clue perfectly."
-            ],
-            'medium': [
-                "Good detective work! That clue should help guide your investigation.",
-                "Well done! You're getting closer to solving this case.",
-                "Nice work! That clue contains valuable information."
-            ],
-            'easy': [
-                "Great start! Even simple clues can lead to big breakthroughs.",
-                "Good! Sometimes the most obvious clues are the most important.",
-                "Well spotted! That clue will definitely help your investigation."
-            ]
-        };
+        let encouragements;
+
+        if (this.translationService) {
+            const currentLanguage = this.translationService.localizationManager.getCurrentLanguage();
+
+            if (currentLanguage === 'es') {
+                encouragements = {
+                    'difficult': [
+                        "¡Esa fue una pista desafiante - estás pensando como un verdadero detective!",
+                        "¡Excelentes habilidades de deducción! Esa pista debería llevarte en la dirección correcta.",
+                        "¡Impresionante! Entendiste esa pista compleja perfectamente."
+                    ],
+                    'medium': [
+                        "¡Buen trabajo de detective! Esa pista debería ayudar a guiar tu investigación.",
+                        "¡Bien hecho! Te estás acercando a resolver este caso.",
+                        "¡Buen trabajo! Esa pista contiene información valiosa."
+                    ],
+                    'easy': [
+                        "¡Excelente comienzo! Incluso las pistas simples pueden llevar a grandes avances.",
+                        "¡Bien! A veces las pistas más obvias son las más importantes.",
+                        "¡Bien visto! Esa pista definitivamente ayudará a tu investigación."
+                    ]
+                };
+            } else {
+                encouragements = {
+                    'difficult': [
+                        "That was a challenging clue - you're thinking like a true detective!",
+                        "Excellent deduction skills! That clue should lead you in the right direction.",
+                        "Impressive! You understood that complex clue perfectly."
+                    ],
+                    'medium': [
+                        "Good detective work! That clue should help guide your investigation.",
+                        "Well done! You're getting closer to solving this case.",
+                        "Nice work! That clue contains valuable information."
+                    ],
+                    'easy': [
+                        "Great start! Even simple clues can lead to big breakthroughs.",
+                        "Good! Sometimes the most obvious clues are the most important.",
+                        "Well spotted! That clue will definitely help your investigation."
+                    ]
+                };
+            }
+        } else {
+            // Fallback to English
+            encouragements = {
+                'difficult': [
+                    "That was a challenging clue - you're thinking like a true detective!",
+                    "Excellent deduction skills! That clue should lead you in the right direction.",
+                    "Impressive! You understood that complex clue perfectly."
+                ],
+                'medium': [
+                    "Good detective work! That clue should help guide your investigation.",
+                    "Well done! You're getting closer to solving this case.",
+                    "Nice work! That clue contains valuable information."
+                ],
+                'easy': [
+                    "Great start! Even simple clues can lead to big breakthroughs.",
+                    "Good! Sometimes the most obvious clues are the most important.",
+                    "Well spotted! That clue will definitely help your investigation."
+                ]
+            };
+        }
         
         const options = encouragements[difficulty] || encouragements['easy'];
         const randomIndex = Math.floor(Math.random() * options.length);
@@ -148,14 +218,38 @@ export class InformantSystem {
     generateUnhelpfulFarewell(informant, cityData) {
         const baseFarewell = informant.farewell_unhelpful || 'Sorry I could not help.';
         
-        // Add helpful suggestions for continuing the investigation
-        const suggestions = [
-            "Try checking other cities - someone there might have seen her.",
-            "Keep investigating! Every detective faces dead ends.",
-            "Don't give up! The trail will lead somewhere eventually.",
-            "Perhaps someone in another location has information.",
-            "Keep following your leads - persistence pays off in detective work."
-        ];
+        let suggestions;
+
+        if (this.translationService) {
+            const currentLanguage = this.translationService.localizationManager.getCurrentLanguage();
+
+            if (currentLanguage === 'es') {
+                suggestions = [
+                    "Intenta revisar otras ciudades - alguien allí podría haberla visto.",
+                    "¡Sigue investigando! Todo detective enfrenta callejones sin salida.",
+                    "¡No te rindas! El rastro llevará a algún lugar eventualmente.",
+                    "Tal vez alguien en otra ubicación tenga información.",
+                    "Sigue siguiendo tus pistas - la persistencia da frutos en el trabajo de detective."
+                ];
+            } else {
+                suggestions = [
+                    "Try checking other cities - someone there might have seen her.",
+                    "Keep investigating! Every detective faces dead ends.",
+                    "Don't give up! The trail will lead somewhere eventually.",
+                    "Perhaps someone in another location has information.",
+                    "Keep following your leads - persistence pays off in detective work."
+                ];
+            }
+        } else {
+            // Fallback to English
+            suggestions = [
+                "Try checking other cities - someone there might have seen her.",
+                "Keep investigating! Every detective faces dead ends.",
+                "Don't give up! The trail will lead somewhere eventually.",
+                "Perhaps someone in another location has information.",
+                "Keep following your leads - persistence pays off in detective work."
+            ];
+        }
         
         const randomIndex = Math.floor(Math.random() * suggestions.length);
         return `${baseFarewell} ${suggestions[randomIndex]}`;
@@ -172,13 +266,38 @@ export class InformantSystem {
 
     // Generate redirection hints based on city characteristics
     generateRedirectionHint(cityData) {
-        const hints = [
-            "Try looking in cities with more international connections.",
-            "Perhaps check locations known for cultural attractions.",
-            "Consider cities that are popular with travelers and tourists.",
-            "Look for places where someone might go to experience local culture.",
-            "Think about destinations that offer unique cultural experiences."
-        ];
+        let hints;
+
+        if (this.translationService) {
+            const currentLanguage = this.translationService.localizationManager.getCurrentLanguage();
+
+            if (currentLanguage === 'es') {
+                hints = [
+                    "Intenta buscar en ciudades con más conexiones internacionales.",
+                    "Tal vez revisa ubicaciones conocidas por atracciones culturales.",
+                    "Considera ciudades que son populares entre viajeros y turistas.",
+                    "Busca lugares donde alguien podría ir a experimentar la cultura local.",
+                    "Piensa en destinos que ofrecen experiencias culturales únicas."
+                ];
+            } else {
+                hints = [
+                    "Try looking in cities with more international connections.",
+                    "Perhaps check locations known for cultural attractions.",
+                    "Consider cities that are popular with travelers and tourists.",
+                    "Look for places where someone might go to experience local culture.",
+                    "Think about destinations that offer unique cultural experiences."
+                ];
+            }
+        } else {
+            // Fallback to English
+            hints = [
+                "Try looking in cities with more international connections.",
+                "Perhaps check locations known for cultural attractions.",
+                "Consider cities that are popular with travelers and tourists.",
+                "Look for places where someone might go to experience local culture.",
+                "Think about destinations that offer unique cultural experiences."
+            ];
+        }
         
         // Add region-specific hints based on city country
         if (cityData.country) {
@@ -211,6 +330,11 @@ export class InformantSystem {
 
     // Generate "no more information" response
     generateNoMoreInfoResponse(informant, cityData) {
+        if (this.translationService) {
+            return this.translationService.translate('ui.informant.no_more_info');
+        }
+
+        // Fallback to English if translation service not available
         return "I have no more information.";
     }
 
@@ -230,26 +354,40 @@ export class InformantSystem {
 
     // Generate clue introduction based on difficulty
     generateClueIntroduction(difficulty) {
-        const introductions = {
-            'difficult': [
-                "I have some detailed observations that might help you...",
-                "Let me share some specific details I noticed...",
-                "I observed some particular behaviors that caught my attention...",
-                "There were some subtle clues in what she said and did..."
-            ],
-            'medium': [
-                "I remember some interesting details about her visit...",
-                "She mentioned a few things that might be helpful...",
-                "I noticed some things that could guide your investigation...",
-                "There were some clear signs about where she might be headed..."
-            ],
-            'easy': [
-                "I can tell you some basic things I observed...",
-                "She left some obvious clues about her interests...",
-                "I remember some straightforward details...",
-                "There were some clear indicators about her destination..."
-            ]
-        };
+        let introductions;
+
+        if (this.translationService) {
+            // Get translated introductions
+            introductions = {
+                'difficult': this.translationService.getTranslationArray('ui.informant.clue_introductions.difficult'),
+                'medium': this.translationService.getTranslationArray('ui.informant.clue_introductions.medium'),
+                'easy': this.translationService.getTranslationArray('ui.informant.clue_introductions.easy')
+            };
+        }
+
+        // Fallback to English if translation service not available
+        if (!introductions || !introductions[difficulty] || introductions[difficulty].length === 0) {
+            introductions = {
+                'difficult': [
+                    "I have some detailed observations that might help you...",
+                    "Let me share some specific details I noticed...",
+                    "I observed some particular behaviors that caught my attention...",
+                    "There were some subtle clues in what she said and did..."
+                ],
+                'medium': [
+                    "I remember some interesting details about her visit...",
+                    "She mentioned a few things that might be helpful...",
+                    "I noticed some things that could guide your investigation...",
+                    "There were some clear signs about where she might be headed..."
+                ],
+                'easy': [
+                    "I can tell you some basic things I observed...",
+                    "She left some obvious clues about her interests...",
+                    "I remember some straightforward details...",
+                    "There were some clear indicators about her destination..."
+                ]
+            };
+        }
         
         const options = introductions[difficulty] || introductions['easy'];
         const randomIndex = Math.floor(Math.random() * options.length);

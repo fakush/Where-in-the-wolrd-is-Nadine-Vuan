@@ -17,15 +17,22 @@
         <!-- Intro Screen -->
         <section id="intro-screen" class="game-screen active">
             <div class="detective-badge">🕵️</div>
+            <!-- Language Selector Container -->
+            <div id="language-selector-container" class="language-selector-wrapper">
+                <!-- Language selector will be rendered here -->
+            </div>
             <div class="intro-content fade-in">
                 <img id="game-cover" src="assets/scenes/nadine_cover.png" alt="Game Cover" class="cover-image">
                 <div class="character-intro detective-entrance">
                     <img id="steve-portrait" src="assets/scenes/steve.png" alt="Steve Character" class="character-portrait">
                     <div class="intro-text">
                         <!-- <h1>Where in the World is Nadine Vuan?</h1> -->
-                        <p class="story-text retro-text">You are Steve, a job candidate at Caylent. Your mission: track down Nadine Vuan, the Talent Recruiter, across 11 global cities by following clues from local informants.</p>
-                        <button id="start-game-btn" class="detective-button">
-                            <i class="fas fa-play"></i> Start Investigation
+                        <p class="story-text retro-text" data-translate-key="ui.messages.story_text">You are Steve, a job candidate at Caylent.
+                            Your mission: track down Nadine Vuan, the Talent Recruiter, across 11 global cities by following clues from local
+                            informants.</p>
+                        <button id="start-game-btn" class="detective-button" data-translate-key="ui.buttons.start_investigation"
+                            data-translate-attribute="innerHTML">
+                            <i class="fas fa-play"></i> Comenzar Búsqueda
                         </button>
                     </div>
                 </div>
@@ -36,28 +43,47 @@
         <section id="investigation-screen" class="game-screen">
             <header class="game-header">
                 <h2 id="current-city-name">
-                    <i class="fas fa-map-marker-alt"></i> City Name
+                    <i class="fas fa-map-marker-alt"></i> <span data-translate-key="ui.labels.current_location">Current Location</span>
                 </h2>
-                <div class="game-stats">
-                    <span id="score-count">
-                        <i class="fas fa-star"></i> Score: 0
-                    </span>
-                    <span id="attempts-remaining-count">
-                        <i class="fas fa-heart"></i> Attempts: 3
-                    </span>
-                    <span id="cities-visited-count">
-                        <i class="fas fa-globe-americas"></i> Cities: 0
-                    </span>
-                    <span id="clues-collected-count">
-                        <i class="fas fa-puzzle-piece"></i> Clues: 0
-                    </span>
-                    <span id="progress-indicator" class="progress-indicator">
-                        <i class="fas fa-chart-line"></i> Progress: 0%
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 0%"></div>
+                <div class="header-controls">
+                    <div class="game-stats">
+                        <span id="score-count">
+                            <i class="fas fa-star"></i> <span data-translate-key="ui.labels.score">Score</span>: 0
+                            </span>
+                            <span id="attempts-remaining-count">
+                            <i class="fas fa-heart"></i> <span data-translate-key="ui.labels.attempts">Attempts</span>: 3
+                            </span>
+                            <span id="cities-visited-count">
+                            <i class="fas fa-globe-americas"></i> <span data-translate-key="ui.labels.cities">Cities</span>: 0
+                            </span>
+                            <span id="clues-collected-count">
+                            <i class="fas fa-puzzle-piece"></i> <span data-translate-key="ui.labels.clues">Clues</span>: 0
+                            </span>
+                            <span id="progress-indicator" class="progress-indicator">
+                            <i class="fas fa-chart-line"></i> <span data-translate-key="ui.labels.progress">Progress</span>: 0%
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            </span>
+                            </div>
+                    <div class="settings-menu-container">
+                        <button id="settings-menu-btn" class="settings-button" title="Settings" aria-label="Open Settings Menu">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <div id="settings-dropdown" class="settings-dropdown" style="display: none;">
+                            <div class="settings-header">
+                                <i class="fas fa-cog"></i>
+                                <span data-translate-key="ui.labels.settings">Settings</span>
+                            </div>
+                            <div class="settings-section">
+                                <label class="settings-label" data-translate-key="ui.labels.language">Language:</label>
+                                <div id="runtime-language-selector" class="runtime-language-selector">
+                                    <!-- Language options will be rendered here -->
+                                </div>
+                            </div>
                         </div>
-                    </span>
-                </div>
+                    </div>
+                    </div>
             </header>
             
             <main class="investigation-content slide-in">
@@ -67,23 +93,26 @@
                 
                 <div class="informant-dialogue case-file">
                     <div id="informant-message" class="dialogue-box">
-                        <span class="evidence-marker">Informant</span>
+                        <span class="evidence-marker" data-translate-key="ui.labels.informant">Informant</span>
                         <p id="dialogue-text" class="retro-text">Informant dialogue will appear here...</p>
                     </div>
                 </div>
                 
                 <div class="action-buttons investigation-grid">
-                    <button id="collect-clues-btn" class="action-button">
+                    <button id="collect-clues-btn" class="action-button" data-translate-key="ui.buttons.collect_clues"
+                        data-translate-attribute="innerHTML">
                         <i class="fas fa-search"></i> Collect Clues
                         <div class="button-loading" style="display: none;">
                             <i class="fas fa-spinner fa-spin"></i>
                         </div>
                     </button>
-                    <button id="travel-btn" class="action-button">
+                    <button id="travel-btn" class="action-button" data-translate-key="ui.buttons.travel"
+                        data-translate-attribute="innerHTML">
                         <i class="fas fa-plane"></i> Travel
                     </button>
-                    <button id="view-clues-btn" class="secondary-button">
-                        <i class="fas fa-clipboard-list"></i> View Evidence
+                    <button id="view-clues-btn" class="secondary-button" data-translate-key="ui.buttons.view_evidence"
+                        data-translate-attribute="innerHTML">
+                        <i class="fas fa-clipboard-list"></i> Ver Evidencia
                     </button>
                 </div>
             </main>
@@ -92,8 +121,9 @@
         <!-- Travel Screen -->
         <section id="travel-screen" class="game-screen">
             <header class="game-header">
-                <h2>🌍 Choose Your Destination</h2>
-                <button id="back-to-investigation-btn" class="back-button">
+                <h2 data-translate-key="ui.headers.choose_destination">🌍 Choose Your Destination</h2>
+                <button id="back-to-investigation-btn" class="back-button" data-translate-key="ui.buttons.back_to_investigation"
+                    data-translate-attribute="innerHTML">
                     <i class="fas fa-arrow-left"></i> Back to Investigation
                 </button>
             </header>
@@ -111,15 +141,17 @@
         <!-- Clues Screen -->
         <section id="clues-screen" class="game-screen">
             <header class="game-header">
-                <h2>🔍 Evidence Board</h2>
-                <button id="close-clues-btn" class="back-button">
-                    <i class="fas fa-arrow-left"></i> Back to Investigation
+                <h2 data-translate-key="ui.headers.evidence_board">🔍 Evidence Board</h2>
+                <button id="close-clues-btn" class="back-button" data-translate-key="ui.buttons.back_to_investigation"
+                    data-translate-attribute="innerHTML">
+                    <i class="fas fa-arrow-left"></i> Volver a la Investigación
                 </button>
             </header>
             
             <main class="clues-content fade-in">
                 <div id="clues-list" class="clues-container clue-reveal">
-                    <p class="no-clues-message">No evidence collected yet. Start investigating cities to gather clues!</p>
+                    <p class="no-clues-message" data-translate-key="ui.messages.no_clues_collected">No evidence collected yet. Start
+                        investigating cities to gather clues!</p>
                 </div>
             </main>
         </section>
@@ -130,14 +162,17 @@
                 <div class="character-dialogue detective-entrance">
                     <img id="nadine-portrait" src="assets/scenes/steve.png" alt="Nadine Vuan" class="character-portrait">
                     <div class="dialogue-container">
-                        <h2>🎉 Case Closed!</h2>
+                        <h2 data-translate-key="ui.headers.case_closed">🎉 Case Closed!</h2>
                         <div id="victory-dialogue" class="dialogue-box case-file">
-                            <span class="evidence-marker">Victory</span>
-                            <p class="retro-text">Congratulations, Detective! You found Nadine Vuan in Buenos Aires!</p>
+                            <span class="evidence-marker" data-translate-key="ui.labels.victory">Victory</span>
+                            <p class="retro-text" data-translate-key="ui.messages.victory_message">Congratulations, Detective! You found Nadine Vuan
+                                in Buenos Aires!</p>
                         </div>
                         <div class="final-actions">
-                            <button id="restart-game-btn" class="detective-button">🔄 New Case</button>
-                            <button id="exit-game-btn" class="secondary-button">📁 Close File</button>
+                            <button id="restart-game-btn" class="detective-button" data-translate-key="ui.buttons.new_case"
+                                data-translate-attribute="innerHTML">🔄 Nuevo Caso</button>
+                            <button id="exit-game-btn" class="secondary-button" data-translate-key="ui.buttons.close_file"
+                                data-translate-attribute="innerHTML">📁 Cerrar Archivo</button>
                         </div>
                     </div>
                 </div>
@@ -147,14 +182,17 @@
         <!-- Game Over Screen -->
         <section id="game-over-screen" class="game-screen">
             <div class="game-over-content fade-in">
-                <h2>🚫 Case Unsolved</h2>
+                <h2 data-translate-key="ui.headers.case_unsolved">🚫 Case Unsolved</h2>
                 <div id="game-over-message" class="message-box case-file">
-                    <span class="evidence-marker">Status</span>
-                    <p class="retro-text">The trail has gone cold, detective. Better luck next time!</p>
+                    <span class="evidence-marker" data-translate-key="ui.labels.status">Status</span>
+                    <p class="retro-text" data-translate-key="ui.messages.game_over_message">The trail has gone cold, detective. Better luck
+                        next time!</p>
                 </div>
                 <div class="game-over-actions">
-                    <button id="restart-from-failure-btn" class="detective-button">🔄 Reopen Case</button>
-                    <button id="exit-from-failure-btn" class="secondary-button">📁 Archive Case</button>
+                    <button id="restart-from-failure-btn" class="detective-button" data-translate-key="ui.buttons.reopen_case"
+                        data-translate-attribute="innerHTML">🔄 Reabrir Caso</button>
+                    <button id="exit-from-failure-btn" class="secondary-button" data-translate-key="ui.buttons.archive_case"
+                        data-translate-attribute="innerHTML">📁 Archivar Caso</button>
                 </div>
             </div>
         </section>
@@ -163,7 +201,7 @@
         <section id="loading-screen" class="game-screen">
             <div class="loading-content">
                 <div class="loading-spinner"></div>
-                <p>Analyzing Evidence...</p>
+                <p data-translate-key="ui.messages.analyzing_evidence">Analyzing Evidence...</p>
             </div>
         </section>
 
@@ -174,8 +212,9 @@
     <!-- Fallback message for very old browsers -->
     <noscript>
         <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
-            <h2>🚫 JavaScript Required</h2>
-            <p>This game requires JavaScript to run. Please enable JavaScript in your browser.</p>
+            <h2 data-translate-key="ui.messages.javascript_required">🚫 JavaScript Required</h2>
+            <p data-translate-key="ui.messages.javascript_required_text">This game requires JavaScript to run. Please enable
+                JavaScript in your browser.</p>
         </div>
     </noscript>
 </body>

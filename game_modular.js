@@ -27,8 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
             font-family: Arial, sans-serif;
         `;
         errorDiv.innerHTML = `
-            <h3>🚫 Game Loading Error</h3>
-            <p>Failed to initialize the game. Please refresh the page and try again.</p>
+            <h3 data-translate-key="ui.messages.game_loading_error">🚫 Game Loading Error</h3>
+            <p data-translate-key="ui.messages.game_loading_error_text">Failed to initialize the game. Please refresh the page and try again.</p>
             <p><small>Error: ${error.message}</small></p>
             <button onclick="location.reload()" style="
                 background: white;
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 border-radius: 5px;
                 cursor: pointer;
                 margin-top: 10px;
-            ">Refresh Page</button>
+            " data-translate-key="ui.buttons.refresh_page">Refresh Page</button>
         `;
         document.body.appendChild(errorDiv);
     });

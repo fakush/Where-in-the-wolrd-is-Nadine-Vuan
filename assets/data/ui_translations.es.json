@@ -1,0 +1,204 @@
+{
+  "ui": {
+    "buttons": {
+      "start_investigation": "Comenzar Búsqueda",
+      "start_game": "Iniciar Juego",
+      "collect_clues": "Ver Pistas",
+      "view_clues": "Ver Pistas",
+      "close_clues": "Cerrar Pistas",
+      "restart_game": "Reiniciar Juego",
+      "exit_game": "Salir del Juego",
+      "find_nadine": "Encontrar a Nadine",
+      "no_clues_here": "No Hay Pistas Aquí",
+      "nadine_not_here": "Nadine No Está Aquí",
+      "travel": "Viajar",
+      "processing": "Procesando...",
+      "view_evidence": "Ver Evidencia",
+      "back_to_investigation": "Volver a la Investigación",
+      "new_case": "Nuevo Caso",
+      "reopen_case": "Reabrir Caso",
+      "close_file": "Cerrar Archivo",
+      "archive_case": "Archivar Caso",
+      "refresh_page": "Actualizar Página",
+      "continue": "Continuar",
+      "finish": "Terminar",
+      "complete_journey": "Completar Viaje"
+    },
+    "labels": {
+      "current_location": "Ubicación Actual",
+      "starting_location": "Ubicación Inicial",
+      "score": "Puntuación",
+      "attempts": "Intentos",
+      "cities": "Ciudades",
+      "clues": "Pistas",
+      "progress": "Progreso",
+      "informant": "Informante",
+      "evidence_marker": "Evidencia",
+      "status": "Estado",
+      "victory": "Victoria",
+      "game_complete": "Juego Completado",
+      "select_language": "Seleccionar Idioma",
+      "settings": "Configuración",
+      "language": "Idioma"
+    },
+    "headers": {
+      "choose_destination": "Elige Tu Destino",
+      "evidence_board": "Tablero de Evidencias",
+      "case_closed": "¡Caso Cerrado!",
+      "case_unsolved": "Caso Sin Resolver",
+      "investigation_closed": "Investigación Cerrada",
+      "time_expired": "Tiempo Agotado",
+      "search_exhausted": "Búsqueda Agotada",
+      "final_destination": "Destino Final"
+    },
+    "messages": {
+      "story_text": "Eres Steve, un candidato para un trabajo en Caylent. Tu misión: rastrear a Nadine Vuan, la Reclutadora de Talento, a través de 11 ciudades globales siguiendo pistas de informantes locales.",
+      "analyzing_evidence": "Analizando Evidencia...",
+      "javascript_required": "JavaScript Requerido",
+      "javascript_required_text": "Este juego requiere JavaScript para funcionar. Por favor habilita JavaScript en tu navegador.",
+      "game_loading_error": "Error de Carga del Juego",
+      "game_loading_error_text": "No se pudo inicializar el juego. Por favor actualiza la página e inténtalo de nuevo.",
+      "no_clues_collected": "Aún no se ha recolectado evidencia. ¡Comienza a investigar ciudades para reunir pistas!",
+      "no_clues_message": "Aún no se han recolectado pistas.",
+      "no_cities_available": "No hay más ciudades disponibles para visitar.",
+      "final_destination_not_available": "Destino final no disponible.",
+      "no_dialogue_available": "No hay diálogo disponible.",
+      "victory_message": "¡Felicidades, Detective! ¡Encontraste a Nadine Vuan en Buenos Aires!",
+      "game_over_message": "La pista se ha enfriado, detective. ¡Mejor suerte la próxima vez!",
+      "click_city_hint": "Haz clic en una ciudad para viajar allí",
+      "journey_progress": "4 de 5 ciudades completadas",
+      "final_destination_subtitle": "Donde Nadine Vuan te espera..."
+    },
+    "feedback": {
+      "failed_to_load": "No se pudo cargar el juego completamente. Algunas funciones pueden no funcionar.",
+      "game_data_incomplete": "Los datos del juego pueden estar incompletos. Algunas funciones pueden no funcionar correctamente.",
+      "check_connection": "Por favor verifica tu conexión a internet y actualiza la página.",
+      "data_corrupted": "Los datos del juego parecen estar corruptos. Por favor actualiza la página.",
+      "loading_timeout": "La carga está tomando más tiempo del esperado. Por favor verifica tu conexión.",
+      "refresh_and_retry": "Por favor actualiza la página e inténtalo de nuevo.",
+      "offline_mode": "Usando modo sin conexión. Funcionalidad limitada disponible.",
+      "loading_issues": "Algunas imágenes del juego pueden no mostrarse correctamente debido a problemas de carga.",
+      "reduced_quality": "Ejecutándose en modo de calidad reducida debido a problemas de conexión.",
+      "game_data_offline": "No se pudieron cargar los datos del juego. Usando modo sin conexión."
+    },
+    "game_over": {
+      "attempts_exhausted": {
+        "title": "Investigación Cerrada",
+        "primary": "Has agotado todos los intentos de investigación. La pista se ha enfriado.",
+        "secondary": "A pesar de visitar {citiesVisited} ciudades y recolectar {cluesCollected} pistas, Nadine se mantiene un paso adelante.",
+        "encouragement": "Todo gran candidato enfrenta contratiempos. ¡Aprende de este caso e inténtalo de nuevo!",
+        "action_text": "Reabrir Caso"
+      },
+      "time_exceeded": {
+        "title": "Tiempo Agotado",
+        "primary": "¡Se acabó el tiempo! Nadine ha desaparecido en las sombras una vez más.",
+        "secondary": "Tu investigación de {timeSpent} cubrió {citiesVisited} ciudades y descubrió {cluesCollected} pistas.",
+        "encouragement": "La velocidad y eficiencia son clave. ¡La atraparás la próxima vez!",
+        "action_text": "Nueva Investigación"
+      },
+      "no_cities_remaining": {
+        "title": "Búsqueda Agotada",
+        "primary": "Has buscado en todas partes, pero Nadine resulta demasiado esquiva para esta investigación.",
+        "secondary": "Todas las {totalCitiesExplored} ciudades exploradas con {cluesCollected} pistas recolectadas.",
+        "encouragement": "A veces los mejores candidatos necesitan una perspectiva fresca. ¡Comienza un nuevo caso!",
+        "action_text": "Nuevo Comienzo"
+      },
+      "default": {
+        "title": "Caso Sin Resolver",
+        "primary": "La investigación ha llegado a un punto muerto.",
+        "secondary": "La pista se ha enfriado, pero todo candidato enfrenta desafíos.",
+        "encouragement": "La persistencia es la clave para resolver cualquier misterio. ¡Inténtalo de nuevo!",
+        "action_text": "Reintentar Caso"
+      }
+    },
+    "confirmation": {
+      "restart_game": "¿Estás seguro de que quieres comenzar una nueva investigación? Tu progreso actual se perderá."
+    },
+    "farewell": {
+      "thank_you": "¡Gracias por jugar \"¿Dónde en el Mundo está Nadine Vuan?\"!",
+      "investigation_summary": "Resumen de la Investigación:",
+      "cities_visited": "Ciudades Visitadas: {count}",
+      "clues_collected": "Pistas Recolectadas: {count}",
+      "time_taken": "Tiempo Tomado: {time}",
+      "investigation_efficiency": "Eficiencia de Investigación: {percentage}%",
+      "enjoyed_message": "¡Esperamos que hayas disfrutado tu aventura!"
+    },
+    "journey": {
+      "correct_destination": "¡Destino correcto! Siguiendo la pista perfectamente.",
+      "incorrect_destination": "Destino incorrecto. Nadine no estuvo aquí.",
+      "four_cities_completed": "¡Cuatro ciudades completadas! Buenos Aires te espera como tu destino final.",
+      "journey_complete": "¡Viaje completo! ¡Has encontrado a Nadine en Buenos Aires!",
+      "new_investigation_started": "¡Nueva investigación iniciada! ¡Buena suerte!",
+      "fresh_investigation_started": "¡Investigación fresca iniciada con pizarra limpia! ¡Buena suerte!"
+    },
+    "informant": {
+      "greeting_variations": [
+        "¡Sí, recuerdo a alguien que coincide con esa descripción!",
+        "Vi a alguien así recientemente. Déjame contarte lo que observé...",
+        "¡La persona que buscas - sí, estuvo aquí!",
+        "Tengo información sobre la persona que buscas."
+      ],
+      "encouragements": {
+        "difficult": [
+          "¡Esa fue una pista desafiante - estás pensando como un verdadero detective!",
+          "¡Excelentes habilidades de deducción! Esa pista debería llevarte en la dirección correcta.",
+          "¡Impresionante! Entendiste esa pista compleja perfectamente."
+        ],
+        "medium": [
+          "¡Buen trabajo de detective! Esa pista debería ayudar a guiar tu investigación.",
+          "¡Bien hecho! Te estás acercando a resolver este caso.",
+          "¡Buen trabajo! Esa pista contiene información valiosa."
+        ],
+        "easy": [
+          "¡Excelente comienzo! Incluso las pistas simples pueden llevar a grandes avances.",
+          "¡Bien! A veces las pistas más obvias son las más importantes.",
+          "¡Bien visto! Esa pista definitivamente ayudará a tu investigación."
+        ]
+      },
+      "suggestions": [
+        "Intenta revisar otras ciudades - alguien allí podría haberla visto.",
+        "¡Sigue investigando! Todo detective enfrenta callejones sin salida.",
+        "¡No te rindas! El rastro llevará a algún lugar eventualmente.",
+        "Tal vez alguien en otra ubicación tenga información.",
+        "Sigue siguiendo tus pistas - la persistencia da frutos en el trabajo de detective."
+      ],
+      "redirection_hints": [
+        "Intenta buscar en ciudades con más conexiones internacionales.",
+        "Tal vez revisa ubicaciones conocidas por atracciones culturales.",
+        "Considera ciudades que son populares entre viajeros y turistas.",
+        "Busca lugares donde alguien podría ir a experimentar la cultura local.",
+        "Piensa en destinos que ofrecen experiencias culturales únicas."
+      ],
+      "clue_introductions": {
+        "difficult": [
+          "Tengo algunas observaciones detalladas que podrían ayudarte...",
+          "Déjame compartir algunos detalles específicos que noté...",
+          "Observé algunos comportamientos particulares que llamaron mi atención...",
+          "Hubo algunas pistas sutiles en lo que dijo e hizo..."
+        ],
+        "medium": [
+          "Recuerdo algunos detalles interesantes sobre su visita...",
+          "Mencionó algunas cosas que podrían ser útiles...",
+          "Noté algunas cosas que podrían guiar tu investigación...",
+          "Hubo algunas señales claras sobre hacia dónde podría dirigirse..."
+        ],
+        "easy": [
+          "Puedo contarte algunas cosas básicas que observé...",
+          "Dejó algunas pistas obvias sobre sus intereses...",
+          "Recuerdo algunos detalles directos...",
+          "Hubo algunos indicadores claros sobre su destino..."
+        ]
+      },
+      "no_more_info": "No tengo más información.",
+      "clue_presentation_intro": "Tengo información sobre hacia dónde fue después:",
+      "clue_transformations": [
+        "La vi",
+        "Mencionó que",
+        "Noté que",
+        "Observé que",
+        "Me dijo que",
+        "Vi que"
+      ]
+    }
+  }
+}

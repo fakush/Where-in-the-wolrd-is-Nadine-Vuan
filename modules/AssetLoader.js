@@ -219,45 +219,164 @@ export class AssetLoader {
             timeout = 15000,
             retryOnFailure = true,
             fallbackData = null,
-            showLoadingState = true
+            showLoadingState = true,
+            languageCode = null
         } = options;
 
+        // Create unique asset ID for language-specific data
+        const assetId = languageCode ? `game_data_${languageCode}` : 'game_data';
+
         if (showLoadingState) {
-            this.setLoadingState('game_data', 'loading');
+            this.setLoadingState(assetId, 'loading');
         }
 
         try {
             const data = await this.loadDataWithTimeout(dataPath, timeout);
-            this.setLoadingState('game_data', 'loaded');
+            this.setLoadingState(assetId, 'loaded');
+
+            // Cache language-specific data
+            if (languageCode) {
+                this.cacheLanguageData(languageCode, data);
+            }
+
             return data;
 
         } catch (error) {
-            console.error('Failed to load game data:', error);
+            console.warn(`Failed to load game data from ${dataPath}:`, error.message);
 
             // Handle retry logic
-            if (retryOnFailure && this.shouldRetry('game_data')) {
-                console.log('Retrying game data load...');
+            if (retryOnFailure && this.shouldRetry(assetId)) {
+                console.log(`Retrying game data load for ${dataPath}...`);
                 return this.retryDataLoad(dataPath, options);
             }
 
-            // Report error
-            await this.errorHandler.handleError('network', error, {
+            // Report error (but don't await to avoid blocking)
+            this.errorHandler.handleError('network', error, {
                 assetType: 'data',
                 assetPath: dataPath,
+                languageCode: languageCode,
                 operation: () => this.loadGameData(dataPath, { ...options, retryOnFailure: false })
+            }).catch(handlerError => {
+                console.warn('Error handler failed:', handlerError.message);
             });
 
-            this.setLoadingState('game_data', 'failed');
+            this.setLoadingState(assetId, 'failed');
+
+            // Try language fallback if this was a language-specific load
+            if (languageCode && languageCode !== 'es') {
+                console.log(`Attempting fallback to Spanish for failed language: ${languageCode}`);
+                try {
+                    const fallbackPath = dataPath.replace(`_${languageCode}.json`, '_es.json');
+                    const fallbackData = await this.loadGameData(fallbackPath, {
+                        ...options,
+                        retryOnFailure: false,
+                        languageCode: 'es'
+                    });
+                    console.log(`Using Spanish fallback data for ${languageCode}`);
+                    return fallbackData;
+                } catch (fallbackError) {
+                    console.warn('Fallback to Spanish also failed:', fallbackError.message);
+                }
+            }
 
             // Use fallback data if available
             if (fallbackData) {
-                console.log('Using fallback game data');
+                console.log('Using provided fallback game data');
                 return fallbackData;
             }
 
             // Create minimal fallback data structure
+            console.log('Creating minimal fallback game data');
             return this.createFallbackGameData();
         }
+    }
+
+    // Load language-specific game data
+    async loadLanguageSpecificData(languageCode, options = {}) {
+        const languageFilePath = `assets/data/game_data.${languageCode}.json`;
+
+        console.log(`Loading language-specific data for ${languageCode} from ${languageFilePath}`);
+
+        return this.loadGameData(languageFilePath, {
+            ...options,
+            languageCode: languageCode
+        });
+    }
+
+    // Cache language-specific data for faster subsequent access
+    cacheLanguageData(languageCode, data) {
+        if (!this.languageDataCache) {
+            this.languageDataCache = new Map();
+        }
+
+        this.languageDataCache.set(languageCode, {
+            data: data,
+            timestamp: Date.now()
+        });
+
+        console.log(`Cached language data for ${languageCode}`);
+    }
+
+    // Get cached language data
+    getCachedLanguageData(languageCode) {
+        if (!this.languageDataCache) {
+            return null;
+        }
+
+        const cached = this.languageDataCache.get(languageCode);
+        if (cached) {
+            // Check if cache is still valid (1 hour)
+            const maxAge = 60 * 60 * 1000; // 1 hour in milliseconds
+            if (Date.now() - cached.timestamp < maxAge) {
+                console.log(`Using cached language data for ${languageCode}`);
+                return cached.data;
+            } else {
+                // Remove expired cache
+                this.languageDataCache.delete(languageCode);
+                console.log(`Expired cache removed for ${languageCode}`);
+            }
+        }
+
+        return null;
+    }
+
+    // Preload language-specific data for multiple languages
+    async preloadLanguageData(languageCodes, options = {}) {
+        const results = {
+            loaded: [],
+            failed: [],
+            total: languageCodes.length
+        };
+
+        const loadPromises = languageCodes.map(async (languageCode) => {
+            try {
+                // Check cache first
+                const cachedData = this.getCachedLanguageData(languageCode);
+                if (cachedData) {
+                    results.loaded.push(languageCode);
+                    return { languageCode, success: true, fromCache: true };
+                }
+
+                // Load from file
+                await this.loadLanguageSpecificData(languageCode, {
+                    ...options,
+                    showLoadingState: false
+                });
+                results.loaded.push(languageCode);
+                return { languageCode, success: true, fromCache: false };
+            } catch (error) {
+                results.failed.push({ languageCode, error: error.message });
+                return { languageCode, success: false, error };
+            }
+        });
+
+        const loadResults = await Promise.allSettled(loadPromises);
+
+        console.log(`Language data preloading complete: ${results.loaded.length}/${results.total} successful`);
+        return {
+            ...results,
+            details: loadResults.map(result => result.value || result.reason)
+        };
     }
 
     // Load data with timeout
@@ -420,6 +539,26 @@ export class AssetLoader {
         this.failedAssets.clear();
         this.loadingStates.clear();
         this.retryAttempts.clear();
+
+        // Clear language-specific cache
+        if (this.languageDataCache) {
+            this.languageDataCache.clear();
+        }
+    }
+
+    // Clear language-specific cache only
+    clearLanguageCache(languageCode = null) {
+        if (!this.languageDataCache) {
+            return;
+        }
+
+        if (languageCode) {
+            this.languageDataCache.delete(languageCode);
+            console.log(`Cleared language cache for ${languageCode}`);
+        } else {
+            this.languageDataCache.clear();
+            console.log('Cleared all language cache');
+        }
     }
 
     // Utility delay function

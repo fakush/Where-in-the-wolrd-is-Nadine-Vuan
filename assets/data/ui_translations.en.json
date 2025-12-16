@@ -1,0 +1,204 @@
+{
+  "ui": {
+    "buttons": {
+      "start_investigation": "Start Investigation",
+      "start_game": "Start Game",
+      "collect_clues": "Collect Clues",
+      "view_clues": "View Clues",
+      "close_clues": "Close Clues",
+      "restart_game": "Restart Game",
+      "exit_game": "Exit Game",
+      "find_nadine": "Find Nadine",
+      "no_clues_here": "No Clues Here",
+      "nadine_not_here": "Nadine Not Here",
+      "travel": "Travel",
+      "processing": "Processing...",
+      "view_evidence": "View Evidence",
+      "back_to_investigation": "Back to Investigation",
+      "new_case": "New Case",
+      "reopen_case": "Reopen Case",
+      "close_file": "Close File",
+      "archive_case": "Archive Case",
+      "refresh_page": "Refresh Page",
+      "continue": "Continue",
+      "finish": "Finish",
+      "complete_journey": "Complete Journey"
+    },
+    "labels": {
+      "current_location": "Current Location",
+      "starting_location": "Starting Location",
+      "score": "Score",
+      "attempts": "Attempts",
+      "cities": "Cities",
+      "clues": "Clues",
+      "progress": "Progress",
+      "informant": "Informant",
+      "evidence_marker": "Evidence",
+      "status": "Status",
+      "victory": "Victory",
+      "game_complete": "Game Complete",
+      "select_language": "Select Language",
+      "settings": "Settings",
+      "language": "Language"
+    },
+    "headers": {
+      "choose_destination": "Choose Your Destination",
+      "evidence_board": "Evidence Board",
+      "case_closed": "Case Closed!",
+      "case_unsolved": "Case Unsolved",
+      "investigation_closed": "Investigation Closed",
+      "time_expired": "Time Expired",
+      "search_exhausted": "Search Exhausted",
+      "final_destination": "Final Destination"
+    },
+    "messages": {
+      "story_text": "You are Steve, a job candidate at Caylent. Your mission: track down Nadine Vuan, the Talent Recruiter, across 11 global cities by following clues from local informants.",
+      "analyzing_evidence": "Analyzing Evidence...",
+      "javascript_required": "JavaScript Required",
+      "javascript_required_text": "This game requires JavaScript to run. Please enable JavaScript in your browser.",
+      "game_loading_error": "Game Loading Error",
+      "game_loading_error_text": "Failed to initialize the game. Please refresh the page and try again.",
+      "no_clues_collected": "No evidence collected yet. Start investigating cities to gather clues!",
+      "no_clues_message": "No clues collected yet.",
+      "no_cities_available": "No more cities available to visit.",
+      "final_destination_not_available": "Final destination not available.",
+      "no_dialogue_available": "No dialogue available.",
+      "victory_message": "Congratulations! You found Nadine Vuan in Buenos Aires!",
+      "game_over_message": "The trail has gone cold. Better luck next time!",
+      "click_city_hint": "Click on a city to travel there",
+      "journey_progress": "4 of 5 cities completed",
+      "final_destination_subtitle": "Where Nadine Vuan awaits..."
+    },
+    "feedback": {
+      "failed_to_load": "Failed to load game completely. Some features may not work.",
+      "game_data_incomplete": "Game data may be incomplete. Some features might not work correctly.",
+      "check_connection": "Please check your internet connection and try refreshing the page.",
+      "data_corrupted": "The game data appears to be corrupted. Please refresh the page.",
+      "loading_timeout": "Loading is taking longer than expected. Please check your connection.",
+      "refresh_and_retry": "Please refresh the page and try again.",
+      "offline_mode": "Using offline mode. Limited functionality available.",
+      "loading_issues": "Some game images may not display correctly due to loading issues.",
+      "reduced_quality": "Running in reduced quality mode due to connection issues.",
+      "game_data_offline": "Game data could not be loaded. Using offline mode."
+    },
+    "game_over": {
+      "attempts_exhausted": {
+        "title": "Investigation Closed",
+        "primary": "You have exhausted all investigation attempts. The trail has gone cold.",
+        "secondary": "Despite visiting {citiesVisited} cities and collecting {cluesCollected} clues, Nadine remains one step ahead.",
+        "encouragement": "Every great candidate faces setbacks. Learn from this case and try again!",
+        "action_text": "Reopen Case"
+      },
+      "time_exceeded": {
+        "title": "Time Expired",
+        "primary": "Time has run out! Nadine has vanished into the shadows once again.",
+        "secondary": "Your {timeSpent} investigation covered {citiesVisited} cities and uncovered {cluesCollected} clues.",
+        "encouragement": "Speed and efficiency are key in candidate work. You'll catch her next time!",
+        "action_text": "New Investigation"
+      },
+      "no_cities_remaining": {
+        "title": "Search Exhausted",
+        "primary": "You have searched everywhere, but Nadine proves too elusive for this investigation.",
+        "secondary": "All {totalCitiesExplored} cities explored with {cluesCollected} clues collected.",
+        "encouragement": "Sometimes the best candidates need a fresh perspective. Start a new case!",
+        "action_text": "Fresh Start"
+      },
+      "default": {
+        "title": "Case Unsolved",
+        "primary": "The investigation has reached an impasse.",
+        "secondary": "The trail has gone cold, but every candidate faces challenges.",
+        "encouragement": "Persistence is the key to solving any mystery. Try again!",
+        "action_text": "Retry Case"
+      }
+    },
+    "confirmation": {
+      "restart_game": "Are you sure you want to start a new investigation? Your current progress will be lost."
+    },
+    "farewell": {
+      "thank_you": "Thank you for playing \"Where in the World is Nadine Vuan?\"!",
+      "investigation_summary": "Investigation Summary:",
+      "cities_visited": "Cities Visited: {count}",
+      "clues_collected": "Clues Collected: {count}",
+      "time_taken": "Time Taken: {time}",
+      "investigation_efficiency": "Investigation Efficiency: {percentage}%",
+      "enjoyed_message": "We hope you enjoyed your adventure!"
+    },
+    "journey": {
+      "correct_destination": "Correct destination! Following the trail perfectly.",
+      "incorrect_destination": "Incorrect destination. Nadine wasn't here.",
+      "four_cities_completed": "Four cities completed! Buenos Aires awaits as your final destination.",
+      "journey_complete": "Journey complete! You have found Nadine in Buenos Aires!",
+      "new_investigation_started": "New investigation started! Good luck!",
+      "fresh_investigation_started": "Fresh investigation started with clean slate! Good luck!"
+    },
+    "informant": {
+      "greeting_variations": [
+        "Yes, I remember someone matching that description!",
+        "I saw someone like that recently. Let me tell you what I observed...",
+        "That person you're looking for - yes, she was here!",
+        "I have information about the person you seek."
+      ],
+      "encouragements": {
+        "difficult": [
+          "That was a challenging clue - you're thinking like a true detective!",
+          "Excellent deduction skills! That clue should lead you in the right direction.",
+          "Impressive! You understood that complex clue perfectly."
+        ],
+        "medium": [
+          "Good detective work! That clue should help guide your investigation.",
+          "Well done! You're getting closer to solving this case.",
+          "Nice work! That clue contains valuable information."
+        ],
+        "easy": [
+          "Great start! Even simple clues can lead to big breakthroughs.",
+          "Good! Sometimes the most obvious clues are the most important.",
+          "Well spotted! That clue will definitely help your investigation."
+        ]
+      },
+      "suggestions": [
+        "Try checking other cities - someone there might have seen her.",
+        "Keep investigating! Every detective faces dead ends.",
+        "Don't give up! The trail will lead somewhere eventually.",
+        "Perhaps someone in another location has information.",
+        "Keep following your leads - persistence pays off in detective work."
+      ],
+      "redirection_hints": [
+        "Try looking in cities with more international connections.",
+        "Perhaps check locations known for cultural attractions.",
+        "Consider cities that are popular with travelers and tourists.",
+        "Look for places where someone might go to experience local culture.",
+        "Think about destinations that offer unique cultural experiences."
+      ],
+      "clue_introductions": {
+        "difficult": [
+          "I have some detailed observations that might help you...",
+          "Let me share some specific details I noticed...",
+          "I observed some particular behaviors that caught my attention...",
+          "There were some subtle clues in what she said and did..."
+        ],
+        "medium": [
+          "I remember some interesting details about her visit...",
+          "She mentioned a few things that might be helpful...",
+          "I noticed some things that could guide your investigation...",
+          "There were some clear signs about where she might be headed..."
+        ],
+        "easy": [
+          "I can tell you some basic things I observed...",
+          "She left some obvious clues about her interests...",
+          "I remember some straightforward details...",
+          "There were some clear indicators about her destination..."
+        ]
+      },
+      "no_more_info": "I have no more information.",
+      "clue_presentation_intro": "I have some information about where she went next:",
+      "clue_transformations": [
+        "I saw her",
+        "She mentioned",
+        "I noticed she",
+        "I observed she",
+        "She told me",
+        "I saw that she"
+      ]
+    }
+  }
+}

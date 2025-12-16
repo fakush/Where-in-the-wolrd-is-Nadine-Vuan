@@ -293,6 +293,8 @@ export class RandomizationSystem {
             weightingFunction = null
         } = options;
 
+
+
         if (!Array.isArray(items) || items.length === 0) {
             console.error('Invalid items array for balanced selection');
             return [];

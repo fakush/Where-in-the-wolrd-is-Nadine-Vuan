@@ -27,6 +27,9 @@ export class UIManager {
         // Initialize NetworkMonitor
         this.networkMonitor = new NetworkMonitor(this);
 
+        // Initialize translation capabilities
+        this.initializeTranslationCapabilities();
+
         // Cache screen elements
         this.screens = {
             intro: document.getElementById('intro-screen'),
@@ -64,6 +67,221 @@ export class UIManager {
 
         // Preload critical assets
         this.preloadCriticalAssets();
+    }
+
+    // Initialize translation capabilities for UI elements
+    initializeTranslationCapabilities() {
+        try {
+            // Set up translation attributes for static UI elements
+            this.setupTranslationAttributes();
+
+            // Register for language change notifications
+            if (this.gameController.translationService) {
+                this.gameController.translationService.registerTranslationObserver((newLanguage, oldLanguage) => {
+                    this.handleLanguageChange(newLanguage, oldLanguage);
+                });
+            }
+
+            console.log('Translation capabilities initialized for UIManager');
+        } catch (error) {
+            console.error('Failed to initialize translation capabilities:', error);
+        }
+    }
+
+    // Set up translation attributes for static UI elements
+    setupTranslationAttributes() {
+        // Define translation mappings for UI elements
+        const translationMappings = [
+            // Button translations
+            { selector: '#start-game-btn', key: 'ui.buttons.start_game', attribute: 'innerHTML', template: '<i class="fas fa-play"></i> {text}' },
+            { selector: '#collect-clues-btn', key: 'ui.buttons.collect_clues', attribute: 'innerHTML', template: '<i class="fas fa-search"></i> {text}' },
+            { selector: '#travel-btn', key: 'ui.buttons.travel', attribute: 'innerHTML', template: '<i class="fas fa-plane"></i> {text}' },
+            { selector: '#view-clues-btn', key: 'ui.buttons.view_clues', attribute: 'innerHTML', template: '<i class="fas fa-list"></i> {text}' },
+            { selector: '#back-to-investigation-btn', key: 'ui.buttons.back_to_investigation', attribute: 'innerHTML', template: '<i class="fas fa-arrow-left"></i> {text}' },
+            { selector: '#close-clues-btn', key: 'ui.buttons.close_clues', attribute: 'innerHTML', template: '<i class="fas fa-times"></i> {text}' },
+            { selector: '#restart-game-btn', key: 'ui.buttons.restart_game', attribute: 'innerHTML', template: '<i class="fas fa-redo"></i> {text}' },
+            { selector: '#restart-from-failure-btn', key: 'ui.buttons.restart_game', attribute: 'innerHTML', template: '<i class="fas fa-redo"></i> {text}' },
+            { selector: '#exit-from-failure-btn', key: 'ui.buttons.exit_game', attribute: 'innerHTML', template: '<i class="fas fa-sign-out-alt"></i> {text}' },
+            { selector: '#exit-game-btn', key: 'ui.buttons.exit_game', attribute: 'innerHTML', template: '<i class="fas fa-sign-out-alt"></i> {text}' },
+
+            // Label translations
+            { selector: '.score-label', key: 'ui.labels.score', attribute: 'textContent' },
+            { selector: '.attempts-label', key: 'ui.labels.attempts', attribute: 'textContent' },
+            { selector: '.cities-label', key: 'ui.labels.cities', attribute: 'textContent' },
+            { selector: '.clues-label', key: 'ui.labels.clues', attribute: 'textContent' },
+            { selector: '.current-location-label', key: 'ui.labels.current_location', attribute: 'textContent' },
+
+            // Screen titles and headers
+            { selector: '.intro-title', key: 'ui.titles.game_title', attribute: 'textContent' },
+            { selector: '.investigation-title', key: 'ui.titles.investigation', attribute: 'textContent' },
+            { selector: '.travel-title', key: 'ui.titles.travel', attribute: 'textContent' },
+            { selector: '.clues-title', key: 'ui.titles.clues', attribute: 'textContent' },
+            { selector: '.game-over-title', key: 'ui.titles.game_over', attribute: 'textContent' },
+
+            // Messages and instructions
+            { selector: '.welcome-message', key: 'ui.messages.welcome', attribute: 'textContent' },
+            { selector: '.investigation-instructions', key: 'ui.messages.investigation_instructions', attribute: 'textContent' },
+            { selector: '.travel-instructions', key: 'ui.messages.travel_instructions', attribute: 'textContent' },
+            { selector: '.clues-instructions', key: 'ui.messages.clues_instructions', attribute: 'textContent' }
+        ];
+
+        // Apply translation attributes to elements
+        translationMappings.forEach(mapping => {
+            const elements = document.querySelectorAll(mapping.selector);
+            elements.forEach(element => {
+                element.setAttribute('data-translate-key', mapping.key);
+                element.setAttribute('data-translate-attribute', mapping.attribute);
+                if (mapping.template) {
+                    element.setAttribute('data-translate-template', mapping.template);
+                }
+            });
+        });
+    }
+
+    // Handle language change events
+    handleLanguageChange(newLanguage, oldLanguage) {
+        try {
+            console.log(`UIManager handling language change from ${oldLanguage} to ${newLanguage}`);
+
+            // Update all translatable elements
+            this.updateAllTranslatableElements();
+
+            // Update dynamic content that depends on current game state
+            this.updateDynamicTranslatableContent();
+
+            // Update progress display with new language
+            if (this.gameController.gameState) {
+                this.gameController.updateProgressDisplay();
+            }
+
+            console.log('UIManager language change handling completed');
+        } catch (error) {
+            console.error('Error handling language change in UIManager:', error);
+        }
+    }
+
+    // Update all elements with translation attributes
+    updateAllTranslatableElements() {
+        if (!this.gameController.translationService) {
+            console.warn('Translation service not available');
+            return;
+        }
+
+        const translatedCount = this.gameController.translationService.translateAll(document);
+        console.log(`Updated ${translatedCount} translatable elements`);
+    }
+
+    // Update dynamic translatable content based on current game state
+    updateDynamicTranslatableContent() {
+        try {
+            // Update button states with translated text
+            this.updateButtonTranslations();
+
+            // Update progress labels with translated text
+            this.updateProgressLabels();
+
+            // Update screen-specific content
+            this.updateScreenSpecificTranslations();
+
+        } catch (error) {
+            console.error('Error updating dynamic translatable content:', error);
+        }
+    }
+
+    // Update button translations based on current state
+    updateButtonTranslations() {
+        const translationService = this.gameController.translationService;
+        if (!translationService) return;
+
+        // Update collect clues button based on current city state
+        if (this.elements.collectCluesBtn && this.gameController.gameState.currentCity) {
+            const cityData = this.gameController.getCityData(this.gameController.gameState.currentCity);
+            const hasClues = this.gameController.hasCityClues(this.gameController.gameState.currentCity);
+
+            if (cityData && cityData.is_final) {
+                // Buenos Aires - final destination
+                const buttonText = translationService.translate('ui.buttons.find_nadine', {}, 'Find Nadine');
+                this.elements.collectCluesBtn.innerHTML = `<i class="fas fa-user-check"></i> ${buttonText}`;
+            } else if (hasClues) {
+                // City has clues
+                const buttonText = translationService.translate('ui.buttons.collect_clues', {}, 'Collect Clues');
+                this.elements.collectCluesBtn.innerHTML = `<i class="fas fa-search"></i> ${buttonText}`;
+            } else {
+                // No clues in this city
+                const buttonText = translationService.translate('ui.buttons.no_clues_here', {}, 'No Clues Here');
+                this.elements.collectCluesBtn.innerHTML = `<i class="fas fa-times"></i> ${buttonText}`;
+            }
+        }
+
+        // Update travel button
+        if (this.elements.travelBtn) {
+            const buttonText = translationService.translate('ui.buttons.travel', {}, 'Travel');
+            this.elements.travelBtn.innerHTML = `<i class="fas fa-plane"></i> ${buttonText}`;
+        }
+    }
+
+    // Update progress labels with translations
+    updateProgressLabels() {
+        const translationService = this.gameController.translationService;
+        if (!translationService || !this.gameController.gameState) return;
+
+        const stats = this.gameController.failureHandler.calculateEnhancedStats();
+
+        // Update score label
+        if (this.elements.scoreCount) {
+            const scoreLabel = translationService.translate('ui.labels.score', {}, 'Score');
+            this.elements.scoreCount.innerHTML = `<i class="fas fa-star"></i> ${scoreLabel}: ${stats.score || 0}`;
+        }
+
+        // Update attempts label
+        if (this.elements.attemptsRemainingCount) {
+            const attempts = stats.attemptsRemaining || 0;
+            const icon = attempts <= 1 ? 'fas fa-heart-broken' : 'fas fa-heart';
+            const color = attempts <= 1 ? 'color: #ff4444;' : '';
+            const attemptsLabel = translationService.translate('ui.labels.attempts', {}, 'Attempts');
+            this.elements.attemptsRemainingCount.innerHTML = `<i class="${icon}" style="${color}"></i> ${attemptsLabel}: ${attempts}`;
+        }
+
+        // Update cities label
+        if (this.elements.citiesVisitedCount) {
+            const citiesLabel = translationService.translate('ui.labels.cities', {}, 'Cities');
+            this.elements.citiesVisitedCount.innerHTML = `<i class="fas fa-globe-americas"></i> ${citiesLabel}: ${stats.citiesVisited || 0}`;
+        }
+
+        // Update clues label
+        if (this.elements.cluesCollectedCount) {
+            const cluesLabel = translationService.translate('ui.labels.clues', {}, 'Clues');
+            this.elements.cluesCollectedCount.innerHTML = `<i class="fas fa-puzzle-piece"></i> ${cluesLabel}: ${stats.cluesCollected || 0}`;
+        }
+    }
+
+    // Update screen-specific translations
+    updateScreenSpecificTranslations() {
+        const translationService = this.gameController.translationService;
+        if (!translationService) return;
+
+        // Update current city name display
+        if (this.elements.currentCityName && this.gameController.gameState.currentCity) {
+            const cityData = this.gameController.getCityData(this.gameController.gameState.currentCity);
+            if (cityData) {
+                // City names should come from the language-specific game data
+                this.elements.currentCityName.textContent = `${cityData.name}, ${cityData.country}`;
+            }
+        }
+
+        // Update no cities message if visible
+        const noCitiesMessage = document.querySelector('.no-cities-message');
+        if (noCitiesMessage) {
+            const message = translationService.translate('ui.messages.no_cities_available', {}, 'No more cities available to visit.');
+            noCitiesMessage.textContent = `🚫 ${message}`;
+        }
+
+        // Update no clues message if visible
+        const noCluesMessage = document.querySelector('.no-clues-message');
+        if (noCluesMessage) {
+            const message = translationService.translate('ui.messages.no_clues_message', {}, 'No clues collected yet.');
+            noCluesMessage.textContent = message;
+        }
     }
 
     // Set up event listeners
@@ -293,20 +511,8 @@ export class UIManager {
             };
         }
 
-        // Update collect clues button state
-        if (this.elements.collectCluesBtn) {
-            this.elements.collectCluesBtn.disabled = !hasClues;
-            if (hasClues) {
-                // Special button text for Buenos Aires (final destination)
-                if (cityData.is_final) {
-                    this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-user-check"></i> Find Nadine';
-                } else {
-                    this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-search"></i> Collect Clues';
-                }
-            } else {
-                this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-times"></i> No Clues Here';
-            }
-        }
+        // Update collect clues button state using centralized translation method
+        this.updateButtonTranslations();
     }
 
     // Show world map
@@ -326,7 +532,10 @@ export class UIManager {
         console.log('Available cities for travel:', availableCities.map(c => `${c.id} (${c.name})`));
 
         if (availableCities.length === 0) {
-            this.elements.cityMarkers.innerHTML = '<p class="no-cities-message">🚫 No more cities available to visit.</p>';
+            const message = this.gameController.translationService ?
+                this.gameController.translationService.translate('ui.messages.no_cities_available', {}, 'No more cities available to visit.') :
+                'No more cities available to visit.';
+            this.elements.cityMarkers.innerHTML = `<p class="no-cities-message">🚫 ${message}</p>`;
             return;
         }
 
@@ -449,7 +658,10 @@ export class UIManager {
         const buenosAires = availableCities.find(city => city.is_final);
 
         if (!buenosAires) {
-            this.elements.cityMarkers.innerHTML = '<p class="error-message">🚫 Final destination not available.</p>';
+            const message = this.gameController.translationService ?
+                this.gameController.translationService.translate('ui.messages.final_destination_not_available', {}, 'Final destination not available.') :
+                'Final destination not available.';
+            this.elements.cityMarkers.innerHTML = `<p class="error-message">🚫 ${message}</p>`;
             return;
         }
 
@@ -492,7 +704,10 @@ export class UIManager {
         if (!this.elements.cluesList) return;
 
         if (clues.length === 0) {
-            this.elements.cluesList.innerHTML = '<p class="no-clues-message">No clues collected yet.</p>';
+            const message = this.gameController.translationService ?
+                this.gameController.translationService.translate('ui.messages.no_clues_message', {}, 'No clues collected yet.') :
+                'No clues collected yet.';
+            this.elements.cluesList.innerHTML = `<p class="no-clues-message">${message}</p>`;
             return;
         }
 
@@ -515,24 +730,8 @@ export class UIManager {
 
     // Update progress display
     updateProgressDisplay(stats) {
-        if (this.elements.scoreCount) {
-            this.elements.scoreCount.innerHTML = `<i class="fas fa-star"></i> Score: ${stats.score || 0}`;
-        }
-
-        if (this.elements.attemptsRemainingCount) {
-            const attempts = stats.attemptsRemaining || 0;
-            const icon = attempts <= 1 ? 'fas fa-heart-broken' : 'fas fa-heart';
-            const color = attempts <= 1 ? 'color: #ff4444;' : '';
-            this.elements.attemptsRemainingCount.innerHTML = `<i class="${icon}" style="${color}"></i> Attempts: ${attempts}`;
-        }
-
-        if (this.elements.citiesVisitedCount) {
-            this.elements.citiesVisitedCount.innerHTML = `<i class="fas fa-globe-americas"></i> Cities: ${stats.citiesVisited || 0}`;
-        }
-        
-        if (this.elements.cluesCollectedCount) {
-            this.elements.cluesCollectedCount.innerHTML = `<i class="fas fa-puzzle-piece"></i> Clues: ${stats.cluesCollected || 0}`;
-        }
+        // Use the centralized progress label update method
+        this.updateProgressLabels();
     }
 
     // Show game over screen with enhanced information
@@ -743,7 +942,8 @@ export class UIManager {
         
         if (this.elements.collectCluesBtn) {
             this.elements.collectCluesBtn.disabled = true;
-            this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-times"></i> No Clues Here';
+            // Use centralized button translation method
+            this.updateButtonTranslations();
         }
     }
 
@@ -792,13 +992,19 @@ export class UIManager {
         // Disable collect clues button
         if (this.elements.collectCluesBtn) {
             this.elements.collectCluesBtn.disabled = true;
-            this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-times"></i> Nadine Not Here';
+            const buttonText = this.gameController.translationService ?
+                this.gameController.translationService.translate('ui.buttons.nadine_not_here', {}, 'Nadine Not Here') :
+                'Nadine Not Here';
+            this.elements.collectCluesBtn.innerHTML = `<i class="fas fa-times"></i> ${buttonText}`;
         }
 
         // Disable travel button temporarily
         if (this.elements.travelBtn) {
             this.elements.travelBtn.disabled = true;
-            this.elements.travelBtn.innerHTML = '<i class="fas fa-hourglass-half"></i> Processing...';
+            const buttonText = this.gameController.translationService ?
+                this.gameController.translationService.translate('ui.buttons.processing', {}, 'Processing...') :
+                'Processing...';
+            this.elements.travelBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> ${buttonText}`;
         }
     }
 
@@ -806,7 +1012,8 @@ export class UIManager {
     resetTravelButton() {
         if (this.elements.travelBtn) {
             this.elements.travelBtn.disabled = false;
-            this.elements.travelBtn.innerHTML = '<i class="fas fa-plane"></i> Travel';
+            // Use centralized button translation method
+            this.updateButtonTranslations();
         }
     }
 
@@ -830,7 +1037,10 @@ export class UIManager {
         }
         
         if (this.elements.currentCityName) {
-            this.elements.currentCityName.textContent = 'Starting Location';
+            const locationText = this.gameController.translationService ?
+                this.gameController.translationService.translate('ui.labels.starting_location', {}, 'Starting Location') :
+                'Starting Location';
+            this.elements.currentCityName.textContent = locationText;
         }
         
         // Clear clues list
@@ -848,14 +1058,13 @@ export class UIManager {
             this.elements.cityMarkers.innerHTML = '';
         }
         
-        // Reset button states
+        // Reset button states using centralized translation method
         if (this.elements.collectCluesBtn) {
             this.elements.collectCluesBtn.disabled = false;
-            this.elements.collectCluesBtn.innerHTML = '<i class="fas fa-search"></i> Collect Clues';
         }
 
-        // Reset travel button
-        this.resetTravelButton();
+        // Update all button translations
+        this.updateButtonTranslations();
 
         // Clear loading indicators
         this.loadingIndicators.forEach(indicator => {
@@ -990,7 +1199,10 @@ export class UIManager {
         // Safety check for undefined text
         if (!text || typeof text !== 'string') {
             console.warn('typeDialogue called with invalid text:', text);
-            element.textContent = 'No dialogue available.';
+            const fallbackText = this.gameController.translationService ?
+                this.gameController.translationService.translate('ui.messages.no_dialogue_available', {}, 'No dialogue available.') :
+                'No dialogue available.';
+            element.textContent = fallbackText;
             element.classList.add('dialogue-complete');
             if (onComplete) onComplete();
             return;
@@ -1039,7 +1251,10 @@ export class UIManager {
         const continueButton = document.createElement('button');
         continueButton.id = 'continue-button';
         continueButton.className = 'btn btn-primary continue-btn';
-        continueButton.innerHTML = `<i class="fas fa-arrow-right"></i> ${buttonText}`;
+        const translatedButtonText = this.gameController.translationService ?
+            this.gameController.translationService.translate('ui.buttons.continue', {}, buttonText) :
+            buttonText;
+        continueButton.innerHTML = `<i class="fas fa-arrow-right"></i> ${translatedButtonText}`;
 
         // Add click handler
         continueButton.addEventListener('click', () => {

@@ -7,6 +7,10 @@ export class SessionManager {
     constructor(gameState, uiManager) {
         this.gameState = gameState;
         this.uiManager = uiManager;
+
+        // Language preference storage key
+        this.languagePreferenceKey = 'nadine_game_language_preference';
+        this.defaultLanguage = 'es'; // Spanish as default per requirements
     }
 
     // Perform complete session reset with validation
@@ -142,26 +146,34 @@ export class SessionManager {
 
     // Perform deep session clean if contamination is detected
     performDeepSessionClean() {
+        // Preserve language preference before clearing
+        const currentLanguagePreference = this.getLanguagePreference();
+
         // Clear all localStorage keys related to the game
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && key.includes('nadine-vuan')) {
+            if (key && key.includes('nadine-vuan') && key !== this.languagePreferenceKey) {
                 keysToRemove.push(key);
             }
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
         
+        // Restore language preference after cleaning
+        this.storeLanguagePreference(currentLanguagePreference);
+
         // Force complete state reset
         this.forceCleanSessionState();
         
         // Clear all UI elements
-        if (this.uiManager) {
+        if (this.uiManager && typeof this.uiManager.clearUIState === 'function') {
             this.uiManager.clearUIState();
         }
         
         // Reinitialize with fresh state
-        this.gameState.initializeGame();
+        if (this.gameState && typeof this.gameState.initializeGame === 'function') {
+            this.gameState.initializeGame();
+        }
         
         console.log('Deep session clean completed');
     }
@@ -191,6 +203,96 @@ export class SessionManager {
         } catch (error) {
             // Silently handle DOM errors in testing environment
             console.log('DOM operations skipped in testing environment');
+        }
+    }
+
+    /**
+     * Store language preference in localStorage
+     * @param {string} languageCode - Language code to store (e.g., 'es', 'en')
+     */
+    storeLanguagePreference(languageCode) {
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(this.languagePreferenceKey, languageCode);
+                console.log(`SessionManager: Stored language preference: ${languageCode}`);
+            } else {
+                console.warn('SessionManager: localStorage not available, cannot store language preference');
+            }
+        } catch (error) {
+            console.warn('SessionManager: Failed to store language preference:', error);
+        }
+    }
+
+    /**
+     * Retrieve language preference from localStorage
+     * @returns {string} Language code or default language if no preference exists
+     */
+    getLanguagePreference() {
+        try {
+            if (typeof localStorage !== 'undefined') {
+                const storedLanguage = localStorage.getItem(this.languagePreferenceKey);
+
+                if (storedLanguage) {
+                    console.log(`SessionManager: Retrieved language preference: ${storedLanguage}`);
+                    return storedLanguage;
+                }
+            }
+
+            // Return default language if no preference exists
+            console.log(`SessionManager: No language preference found, using default: ${this.defaultLanguage}`);
+            return this.defaultLanguage;
+
+        } catch (error) {
+            console.warn('SessionManager: Failed to retrieve language preference:', error);
+            return this.defaultLanguage;
+        }
+    }
+
+    /**
+     * Initialize language preference on game startup
+     * Sets the language preference to the stored value or default if none exists
+     * @returns {string} The language code that was set
+     */
+    initializeLanguagePreference() {
+        const languagePreference = this.getLanguagePreference();
+
+        // If no preference was stored, store the default language
+        if (!localStorage.getItem(this.languagePreferenceKey)) {
+            this.storeLanguagePreference(this.defaultLanguage);
+        }
+
+        console.log(`SessionManager: Initialized language preference: ${languagePreference}`);
+        return languagePreference;
+    }
+
+    /**
+     * Clear language preference from storage
+     * Used during deep session clean or when resetting preferences
+     */
+    clearLanguagePreference() {
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(this.languagePreferenceKey);
+                console.log('SessionManager: Cleared language preference');
+            }
+        } catch (error) {
+            console.warn('SessionManager: Failed to clear language preference:', error);
+        }
+    }
+
+    /**
+     * Check if a language preference exists in storage
+     * @returns {boolean} True if a preference exists, false otherwise
+     */
+    hasLanguagePreference() {
+        try {
+            if (typeof localStorage !== 'undefined') {
+                return localStorage.getItem(this.languagePreferenceKey) !== null;
+            }
+            return false;
+        } catch (error) {
+            console.warn('SessionManager: Failed to check language preference existence:', error);
+            return false;
         }
     }
 }

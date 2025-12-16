@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Test - Where in the World is Nadine Vuan?</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #000;
+            color: #0f0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+        }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .warning { color: #ff0; }
+        #console-output {
+            background: #111;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🕵️ Game Loading Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results">
+            <p>⏳ Running tests...</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="console-output"></div>
+    </div>
+
+    <script type="module">
+        // Capture console output
+        const consoleOutput = document.getElementById('console-output');
+        const testResults = document.getElementById('test-results');
+        
+        const originalConsole = {
+            log: console.log,
+            warn: console.warn,
+            error: console.error
+        };
+
+        function addToConsole(type, message) {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${type.toUpperCase()}] ${message}`;
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = (...args) => {
+            originalConsole.log(...args);
+            addToConsole('log', args.join(' '));
+        };
+
+        console.warn = (...args) => {
+            originalConsole.warn(...args);
+            addToConsole('warning', args.join(' '));
+        };
+
+        console.error = (...args) => {
+            originalConsole.error(...args);
+            addToConsole('error', args.join(' '));
+        };
+
+        // Test game loading
+        async function runTests() {
+            const results = [];
+            
+            try {
+                // Test 1: Load game data
+                console.log('Test 1: Loading game data...');
+                const response = await fetch('assets/data/game_data.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const gameData = await response.json();
+                
+                if (gameData && gameData.game_data && gameData.game_data.cities) {
+                    results.push('✅ Game data loaded successfully');
+                    console.log(`Found ${gameData.game_data.cities.length} cities`);
+                } else {
+                    results.push('❌ Game data structure invalid');
+                }
+
+                // Test 2: Validate cities
+                console.log('Test 2: Validating cities...');
+                const cities = gameData.game_data.cities;
+                const buenosAires = cities.find(city => city.is_final === true);
+                const regularCities = cities.filter(city => city.is_final !== true);
+                
+                if (buenosAires) {
+                    results.push('✅ Buenos Aires found as final destination');
+                } else {
+                    results.push('❌ Buenos Aires not found or not marked as final');
+                }
+                
+                if (regularCities.length >= 4) {
+                    results.push(`✅ Sufficient cities for route generation (${regularCities.length} regular cities)`);
+                } else {
+                    results.push(`❌ Not enough cities for route generation (${regularCities.length} regular cities, need at least 4)`);
+                }
+
+                // Test 3: Test route generation logic
+                console.log('Test 3: Testing route generation...');
+                function testRouteGeneration(cities) {
+                    const buenosAires = cities.find(city => city.is_final === true);
+                    const availableCities = cities.filter(city => city.is_final !== true);
+                    
+                    if (availableCities.length < 4) {
+                        return { success: false, error: 'Not enough cities' };
+                    }
+                    
+                    // Simple random selection for test
+                    const selectedCities = [];
+                    const cityPool = [...availableCities];
+                    for (let i = 0; i < 4; i++) {
+                        const randomIndex = Math.floor(Math.random() * cityPool.length);
+                        selectedCities.push(cityPool.splice(randomIndex, 1)[0]);
+                    }
+                    
+                    const route = selectedCities.map(city => city.id);
+                    route.push(buenosAires.id);
+                    
+                    return { success: true, route: route };
+                }
+                
+                const routeTest = testRouteGeneration(cities);
+                if (routeTest.success) {
+                    results.push(`✅ Route generation test passed: ${routeTest.route.join(' → ')}`);
+                } else {
+                    results.push(`❌ Route generation test failed: ${routeTest.error}`);
+                }
+
+                // Test 4: Load GameController module
+                console.log('Test 4: Loading GameController module...');
+                try {
+                    const { GameController } = await import('./modules/GameController.js');
+                    results.push('✅ GameController module loaded successfully');
+                    
+                    // Test 5: Initialize GameController
+                    console.log('Test 5: Initializing GameController...');
+                    const gameController = new GameController();
+                    results.push('✅ GameController instantiated successfully');
+                    
+                } catch (moduleError) {
+                    results.push(`❌ GameController module failed: ${moduleError.message}`);
+                    console.error('Module loading error:', moduleError);
+                }
+
+            } catch (error) {
+                results.push(`❌ Test failed: ${error.message}`);
+                console.error('Test error:', error);
+            }
+
+            // Display results
+            testResults.innerHTML = results.map(result => `<p>${result}</p>`).join('');
+        }
+
+        // Run tests when page loads
+        runTests();
+    </script>
+</body>
+</html>
+</text>
+</invoke>

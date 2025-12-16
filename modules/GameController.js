@@ -14,6 +14,10 @@ import { UIManager } from './UIManager.js';
 import { RandomizationSystem } from './RandomizationSystem.js';
 import { InputValidator } from './InputValidator.js';
 import { ErrorHandler } from './ErrorHandler.js';
+import { LocalizationManager } from './LocalizationManager.js';
+import { TranslationService } from './TranslationService.js';
+import { LanguageSelector } from './LanguageSelector.js';
+import { RuntimeLanguageSwitcher } from './RuntimeLanguageSwitcher.js';
 
 export class GameController {
     constructor() {
@@ -21,11 +25,23 @@ export class GameController {
         this.uiState = new UIState();
         this.randomizationSystem = new RandomizationSystem(this.gameState);
         this.clueSystem = new ClueSystem(this.gameState, this.randomizationSystem);
-        this.informantSystem = new InformantSystem(this.gameState, this.clueSystem);
         this.failureHandler = new FailureHandler(this.gameState);
         this.sessionManager = new SessionManager(this.gameState, null); // UIManager will be set later
         this.uiManager = new UIManager(this);
         
+        // Initialize localization and translation services FIRST
+        this.localizationManager = new LocalizationManager(this);
+        this.translationService = new TranslationService(this.localizationManager);
+
+        // Now initialize InformantSystem with translation service available
+        this.informantSystem = new InformantSystem(this.gameState, this.clueSystem, this.translationService);
+
+        // Initialize language selector (will be rendered after UI initialization)
+        this.languageSelector = null;
+
+        // Initialize runtime language switcher for settings menu
+        this.runtimeLanguageSwitcher = null;
+
         // Initialize input validation and error handling
         this.inputValidator = new InputValidator(this);
         this.errorHandler = new ErrorHandler(this);
@@ -48,6 +64,12 @@ export class GameController {
             // Initialize UI first so AssetLoader is available
             this.uiManager.init();
 
+            // Initialize randomization system early
+            this.randomizationSystem.initialize();
+
+            // Initialize localization system
+            await this.initializeLocalization();
+
             // Load game data with enhanced error handling
             await this.loadGameData();
             
@@ -59,6 +81,12 @@ export class GameController {
             
             // Hide loading screen and show appropriate screen based on loaded state
             this.hideLoadingScreen();
+
+            // Initialize UI translations after everything is loaded
+            this.initializeUITranslations();
+
+            // Initialize language selector on welcome screen
+            this.initializeLanguageSelector();
 
             if (hasLoadedState && this.gameState.phase !== 'intro') {
                 this.uiManager.showScreen(this.gameState.phase + '-screen');
@@ -74,16 +102,28 @@ export class GameController {
             this.hideLoadingScreen();
 
             // Enhanced error handling with fallback options
-            if (this.uiManager) {
-                this.uiManager.showFeedbackMessage(
-                    'Failed to load game completely. Some features may not work.',
-                    'error',
-                    { duration: 8000, persistent: true }
-                );
+            console.error('Game initialization failed:', error);
 
-                // Try to show intro screen anyway
+            // Try to show intro screen anyway with fallback data
+            if (this.uiManager) {
                 try {
+                    // Try to create minimal fallback data
+                    if (this.uiManager.assetLoader) {
+                        const fallbackData = this.uiManager.assetLoader.createFallbackGameData();
+                        this.gameState.gameData = fallbackData.game_data;
+                        console.log('Using fallback game data for initialization');
+                    }
+
                     this.uiManager.showScreen('intro-screen');
+
+                    // Only show error message if we couldn't recover
+                    if (!this.gameState.gameData) {
+                        this.uiManager.showFeedbackMessage(
+                            'Game data could not be loaded. Please refresh the page.',
+                            'error',
+                            { duration: 8000 }
+                        );
+                    }
                 } catch (uiError) {
                     console.error('UI initialization also failed:', uiError);
                     // Last resort - show basic error message
@@ -110,50 +150,186 @@ export class GameController {
         }
     }
 
+    // Initialize localization system and load UI translations
+    async initializeLocalization() {
+        try {
+            // Get language preference from SessionManager (defaults to Spanish if none exists)
+            const preferredLanguage = this.sessionManager.initializeLanguagePreference();
+
+            // Load UI translations for both languages
+            await this.localizationManager.loadLanguageData('es');
+            await this.localizationManager.loadLanguageData('en');
+
+            // Set current language to user's preference
+            await this.localizationManager.setLanguage(preferredLanguage);
+
+            console.log(`Localization system initialized successfully with language: ${preferredLanguage}`);
+
+        } catch (error) {
+            console.warn('Failed to initialize localization system:', error);
+            // Continue without localization - the UI will use fallback text
+        }
+    }
+
+    // Initialize UI translations for all elements with translation keys
+    initializeUITranslations() {
+        try {
+            // Translate all elements in the document that have translation keys
+            const translatedCount = this.translationService.translateAll(document);
+            console.log(`Initialized UI translations: ${translatedCount} elements translated`);
+        } catch (error) {
+            console.warn('Failed to initialize UI translations:', error);
+        }
+    }
+
+    // Initialize language selector component on welcome screen
+    initializeLanguageSelector() {
+        try {
+            // Create language selector instance
+            this.languageSelector = new LanguageSelector(this.localizationManager, this.uiManager, this.sessionManager);
+
+            // Find the language selector container on the welcome screen
+            const selectorContainer = document.getElementById('language-selector-container');
+
+            if (selectorContainer) {
+                // Render the language selector
+                const success = this.languageSelector.render(selectorContainer);
+
+                if (success) {
+                    console.log('Language selector initialized successfully on welcome screen');
+                } else {
+                    console.warn('Failed to render language selector');
+                }
+            } else {
+                console.warn('Language selector container not found in DOM');
+            }
+
+            // Initialize runtime language switcher for settings menu
+            this.initializeRuntimeLanguageSwitcher();
+
+            // Register for language change notifications to reload game data
+            if (this.translationService) {
+                this.translationService.registerTranslationObserver(async (newLanguage, oldLanguage) => {
+                    console.log(`Language changed from ${oldLanguage} to ${newLanguage}, reloading game data...`);
+                    await this.reloadGameDataForLanguage(newLanguage);
+                });
+            }
+
+        } catch (error) {
+            console.error('Failed to initialize language selector:', error);
+        }
+    }
+
+    // Initialize runtime language switcher for settings menu
+    initializeRuntimeLanguageSwitcher() {
+        try {
+            // Create runtime language switcher instance
+            this.runtimeLanguageSwitcher = new RuntimeLanguageSwitcher(
+                this.localizationManager,
+                this.uiManager,
+                this.sessionManager
+            );
+
+            // Initialize the runtime language switcher
+            const success = this.runtimeLanguageSwitcher.init();
+
+            if (success) {
+                console.log('Runtime language switcher initialized successfully');
+            } else {
+                console.warn('Failed to initialize runtime language switcher');
+            }
+
+        } catch (error) {
+            console.error('Failed to initialize runtime language switcher:', error);
+        }
+    }
+
+    // Reload game data when language changes
+    async reloadGameDataForLanguage(languageCode) {
+        try {
+            // Show loading indicator
+            if (this.uiManager) {
+                this.uiManager.showFeedbackMessage(
+                    'Loading game content for selected language...',
+                    'info',
+                    { duration: 2000, icon: 'fas fa-sync-alt' }
+                );
+            }
+
+            // Load new language-specific game data
+            await this.loadGameData();
+
+            // Update UI elements that depend on game data
+            if (this.gameState.currentCity) {
+                this.uiManager.updateInvestigationScreen(this.gameState.currentCity);
+            }
+
+            // Update progress display with translated labels
+            this.updateProgressDisplay();
+
+            console.log(`Game data reloaded successfully for language: ${languageCode}`);
+
+        } catch (error) {
+            console.error(`Failed to reload game data for language ${languageCode}:`, error);
+
+            if (this.uiManager) {
+                this.uiManager.showFeedbackMessage(
+                    'Failed to load game content for selected language. Using previous data.',
+                    'warning',
+                    { duration: 4000, icon: 'fas fa-exclamation-triangle' }
+                );
+            }
+        }
+    }
+
     // Load game data from JSON file with comprehensive validation and fallback handling
     async loadGameData() {
         try {
+            // Get current language for language-aware data loading
+            const currentLanguage = this.localizationManager.getCurrentLanguage();
+            const languageConfig = this.localizationManager.getLanguageConfig();
+            const languageFilePath = languageConfig.getLanguageFilePath(currentLanguage);
+
+            // Use language-specific file path if available, otherwise fallback to default
+            const dataFilePath = languageFilePath || 'assets/data/game_data.json';
+
+            console.log(`Loading game data for language: ${currentLanguage} from ${dataFilePath}`);
+            console.log('Language config details:', {
+                currentLanguage,
+                languageFilePath,
+                finalDataFilePath: dataFilePath
+            });
+
             // Use AssetLoader if available for enhanced error handling
             let rawData;
 
             if (this.uiManager && this.uiManager.assetLoader) {
-                rawData = await this.uiManager.assetLoader.loadGameData('assets/data/game_data.json', {
+                rawData = await this.uiManager.assetLoader.loadGameData(dataFilePath, {
                     timeout: 15000,
-                    retryOnFailure: true,
-                    showLoadingState: true
+                    retryOnFailure: false, // Reduce retries to prevent multiple error messages
+                    showLoadingState: false // Reduce UI noise during loading
                 });
             } else {
             // Fallback to direct fetch
-                const response = await fetch('assets/data/game_data.json');
+                const response = await fetch(dataFilePath);
                 if (!response.ok) {
-                    throw new Error(`Failed to load game data: HTTP ${response.status} - ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 rawData = await response.json();
             }
             
-            // Validate game data structure
-            const validationResult = DataValidator.validateGameData(rawData);
-            if (!validationResult.isValid) {
-                console.warn('Game data validation failed:', validationResult.errors);
-
-                // If validation fails but we have basic structure, try to use it anyway
-                if (rawData && (rawData.game_data || rawData.cities)) {
-                    console.log('Using potentially incomplete game data');
-                    this.gameState.gameData = rawData.game_data || rawData;
-
-                    // Show warning to user
-                    if (this.uiManager) {
-                        this.uiManager.showFeedbackMessage(
-                            'Game data may be incomplete. Some features might not work correctly.',
-                            'warning',
-                            { duration: 5000 }
-                        );
-                    }
-                    return;
-                }
-
-                throw new Error(`Invalid game data structure: ${validationResult.errors.join(', ')}`);
+            // Basic validation of game data structure
+            if (!rawData || (!rawData.game_data && !rawData.cities)) {
+                throw new Error('Invalid game data structure: missing game_data or cities');
             }
+
+            // Check if we have cities array
+            const gameData = rawData.game_data || rawData;
+            if (!gameData.cities || !Array.isArray(gameData.cities) || gameData.cities.length === 0) {
+                throw new Error('Invalid game data structure: missing or empty cities array');
+            }
+
+            console.log(`Game data validation passed: ${gameData.cities.length} cities found`);
             
             // Extract the actual game data from the wrapper
             this.gameState.gameData = rawData.game_data || rawData;
@@ -161,7 +337,44 @@ export class GameController {
         } catch (error) {
             console.error('Error loading game data:', error);
             
-            // Enhanced error handling with user-friendly messages
+            // Try to load the main game_data.json as fallback before using emergency data
+            const mainGameDataPath = 'assets/data/game_data.json';
+            if (dataFilePath !== mainGameDataPath) {
+                console.log('Language-specific file failed, trying main game_data.json...');
+                try {
+                    const response = await fetch(mainGameDataPath);
+                    if (response.ok) {
+                        const mainGameData = await response.json();
+
+                        // Validate main game data
+                        if (mainGameData && (mainGameData.game_data || mainGameData.cities)) {
+                            const gameData = mainGameData.game_data || mainGameData;
+                            if (gameData.cities && Array.isArray(gameData.cities) && gameData.cities.length > 0) {
+                                this.gameState.gameData = gameData;
+                                console.log(`Successfully loaded main game data as fallback: ${gameData.cities.length} cities`);
+                                return;
+                            }
+                        }
+                    }
+                } catch (mainFileError) {
+                    console.error('Main game data file also failed:', mainFileError);
+                }
+            }
+
+            // Try to use emergency fallback data as last resort
+            if (this.uiManager && this.uiManager.assetLoader) {
+                console.log('Attempting to use emergency fallback game data...');
+                try {
+                    const fallbackData = this.uiManager.assetLoader.createFallbackGameData();
+                    this.gameState.gameData = fallbackData.game_data;
+                    console.log('Successfully loaded emergency fallback game data');
+                    return;
+                } catch (fallbackError) {
+                    console.error('Emergency fallback data creation failed:', fallbackError);
+                }
+            }
+
+            // Only show error messages if all fallbacks fail
             let userMessage = 'Failed to load game data. ';
 
             if (error instanceof TypeError || error.message.includes('fetch')) {
@@ -174,30 +387,12 @@ export class GameController {
                 userMessage += 'Please refresh the page and try again.';
             }
 
-            // Show user-friendly error message
+            // Show user-friendly error message only if all fallbacks failed
             if (this.uiManager) {
                 this.uiManager.showFeedbackMessage(userMessage, 'error', {
                     duration: 10000,
                     persistent: true
                 });
-            }
-
-            // Try to use fallback data if available
-            if (this.uiManager && this.uiManager.assetLoader) {
-                console.log('Attempting to use fallback game data...');
-                try {
-                    const fallbackData = this.uiManager.assetLoader.createFallbackGameData();
-                    this.gameState.gameData = fallbackData.game_data;
-
-                    this.uiManager.showFeedbackMessage(
-                        'Using offline mode. Limited functionality available.',
-                        'info',
-                        { duration: 5000 }
-                    );
-                    return;
-                } catch (fallbackError) {
-                    console.error('Fallback data creation failed:', fallbackError);
-                }
             }
 
             throw error;
@@ -206,7 +401,18 @@ export class GameController {
 
     // Start new game
     startGame() {
-        // Initialize randomization system first for new game
+        // Ensure we have game data before starting
+        if (!this.gameState.gameData || !this.gameState.gameData.cities) {
+            console.error('No game data available for starting game');
+            this.uiManager.showFeedbackMessage(
+                'Game data not loaded. Please refresh the page.',
+                'error',
+                { duration: 5000 }
+            );
+            return;
+            }
+
+        // Re-initialize randomization system for new game
         this.randomizationSystem.initialize();
 
         // Initialize game state with route generation using fair randomization
@@ -215,9 +421,33 @@ export class GameController {
 
         // Ensure we have a valid route and starting city
         if (!this.gameState.cityRoute || this.gameState.cityRoute.length === 0) {
-            console.error('Failed to generate city route');
-            this.uiManager.showError('Failed to start game: Could not generate route');
-            return;
+            console.error('Failed to generate city route during initialization');
+            console.error('Game data cities:', this.gameState.gameData.cities?.length || 0);
+
+            // Try to regenerate route once more with detailed logging
+            console.log('Attempting manual route generation...');
+            this.gameState.cityRoute = this.gameState.generateCityRoute(this.gameState.gameData, this.randomizationSystem);
+
+            console.log('Manual route generation result:', this.gameState.cityRoute);
+
+            if (!this.gameState.cityRoute || this.gameState.cityRoute.length === 0) {
+                // Try a simple fallback route generation
+                console.log('Attempting fallback route generation...');
+                const fallbackRoute = this.createFallbackRoute(this.gameState.gameData);
+
+                if (fallbackRoute && fallbackRoute.length === 5) {
+                    console.log('Fallback route created:', fallbackRoute);
+                    this.gameState.cityRoute = fallbackRoute;
+                    this.gameState.currentCity = fallbackRoute[0];
+                } else {
+                    this.uiManager.showFeedbackMessage(
+                        'Unable to generate game route. Please refresh the page.',
+                        'error',
+                        { duration: 5000 }
+                    );
+                    return;
+                }
+            }
         }
 
         // The starting city should already be set by initializeGame
@@ -234,12 +464,83 @@ export class GameController {
         console.log('Starting city:', this.gameState.currentCity);
         
         this.gameState.saveGameState();
+
+        // Hide language selector when game starts
+        this.hideLanguageSelector();
+
         this.uiManager.showScreen('investigation-screen');
         this.updateProgressDisplay();
         this.uiManager.updateInvestigationScreen(this.gameState.currentCity);
 
         // Show initial greeting dialogue when starting in the first city
         this.showInformantDialogue(this.gameState.currentCity, 'greeting');
+    }
+
+    // Create a simple fallback route when the main generation fails
+    createFallbackRoute(gameData) {
+        try {
+            console.log('Creating fallback route...');
+
+            if (!gameData || !gameData.cities || gameData.cities.length < 5) {
+                console.error('Insufficient game data for fallback route');
+                return null;
+            }
+
+            // Find Buenos Aires
+            const buenosAires = gameData.cities.find(city => city.is_final === true);
+            if (!buenosAires) {
+                console.error('Buenos Aires not found for fallback route');
+                return null;
+            }
+
+            // Get non-final cities
+            const regularCities = gameData.cities.filter(city => city.is_final !== true);
+            if (regularCities.length < 4) {
+                console.error('Not enough regular cities for fallback route');
+                return null;
+            }
+
+            // Simple selection: take first 4 cities alphabetically for consistency
+            const selectedCities = regularCities
+                .sort((a, b) => a.id.localeCompare(b.id))
+                .slice(0, 4);
+
+            const route = selectedCities.map(city => city.id);
+            route.push(buenosAires.id);
+
+            console.log('Fallback route created:', route);
+            return route;
+
+        } catch (error) {
+            console.error('Error creating fallback route:', error);
+            return null;
+        }
+    }
+
+    // Hide language selector when game starts
+    hideLanguageSelector() {
+        try {
+            const languageSelectorContainer = document.getElementById('language-selector-container');
+            if (languageSelectorContainer) {
+                languageSelectorContainer.style.display = 'none';
+                console.log('Language selector hidden after game start');
+            }
+        } catch (error) {
+            console.warn('Failed to hide language selector:', error);
+        }
+    }
+
+    // Show language selector (for restart)
+    showLanguageSelector() {
+        try {
+            const languageSelectorContainer = document.getElementById('language-selector-container');
+            if (languageSelectorContainer) {
+                languageSelectorContainer.style.display = 'block';
+                console.log('Language selector shown');
+            }
+        } catch (error) {
+            console.warn('Failed to show language selector:', error);
+        }
     }
 
     // Process player actions
@@ -432,7 +733,23 @@ export class GameController {
 
     // Display clues in dialogue format
     displayCluesInDialogue(clues, informantName) {
-        let clueText = "I have some information about where she went next:\n\n";
+        // Check current language and use appropriate intro text
+        let introText;
+
+        if (this.translationService) {
+            const currentLanguage = this.translationService.localizationManager.getCurrentLanguage();
+
+            if (currentLanguage === 'es') {
+                introText = "Tengo información sobre hacia dónde fue después:";
+            } else {
+                introText = "I have some information about where she went next:";
+            }
+        } else {
+            // Fallback to English
+            introText = "I have some information about where she went next:";
+        }
+
+        let clueText = `${introText}\n\n`;
 
         clues.forEach((clue, index) => {
             clueText += `${clue.text}\n`;
@@ -444,18 +761,47 @@ export class GameController {
 
     // Transform clue text to be from the informant's perspective
     transformClueToInformantPerspective(clueText, informantName) {
-        // Transform clues to be from the informant's observation
-        const transformations = [
-            `I saw her ${clueText.toLowerCase()}`,
-            `She mentioned ${clueText.toLowerCase()}`,
-            `I noticed she ${clueText.toLowerCase()}`,
-            `She was interested in ${clueText.toLowerCase()}`,
-            `I observed her ${clueText.toLowerCase()}`
-        ];
+        // Check current language and use appropriate transformations
+        let transformations;
+
+        if (this.translationService) {
+            const currentLanguage = this.translationService.localizationManager.getCurrentLanguage();
+
+            if (currentLanguage === 'es') {
+                transformations = [
+                    "La vi",
+                    "Mencionó que",
+                    "Noté que",
+                    "Observé que",
+                    "Me dijo que",
+                    "Vi que"
+                ];
+            } else {
+                transformations = [
+                    "I saw her",
+                    "She mentioned",
+                    "I noticed she",
+                    "I observed she",
+                    "She told me",
+                    "I saw that she"
+                ];
+            }
+        } else {
+            // Fallback to English
+            transformations = [
+                "I saw her",
+                "She mentioned",
+                "I noticed she",
+                "I observed she",
+                "She told me",
+                "I saw that she"
+            ];
+        }
         
-        // Pick a random transformation
+        // Pick a random transformation and combine with clue text
         const randomIndex = Math.floor(Math.random() * transformations.length);
-        return transformations[randomIndex];
+        const prefix = transformations[randomIndex];
+        return `${prefix} ${clueText.toLowerCase()}`;
     }
 
     // Present clues with automatic difficulty progression (hard → medium → easy) - kept for compatibility
@@ -958,7 +1304,10 @@ export class GameController {
 
     // Restart game with complete session isolation
     restartGame() {
-        const confirmed = confirm('Are you sure you want to start a new investigation? Your current progress will be lost.');
+        const confirmMessage = this.translationService ?
+            this.translationService.translate('ui.confirmation.restart_game', {}, 'Are you sure you want to start a new investigation? Your current progress will be lost.') :
+            'Are you sure you want to start a new investigation? Your current progress will be lost.';
+        const confirmed = confirm(confirmMessage);
         if (confirmed) {
             // Perform complete session reset
             this.sessionManager.performCompleteSessionReset();
@@ -974,6 +1323,9 @@ export class GameController {
 
             // Show intro screen
             this.uiManager.showScreen('intro-screen');
+
+            // Show language selector again
+            this.showLanguageSelector();
 
             // Clear any UI state that might persist
             this.uiManager.clearUIState();
@@ -996,13 +1348,29 @@ export class GameController {
     exitGame() {
         // Show completion statistics and farewell message
         const gameStats = this.failureHandler.calculateEnhancedStats();
-        const farewell = `Thank you for playing "Where in the World is Nadine Vuan?"!\n\n` +
-            `Investigation Summary:\n` +
-            `• Cities Visited: ${gameStats.citiesVisited}\n` +
-            `• Clues Collected: ${gameStats.cluesCollected}\n` +
-            `• Time Taken: ${gameStats.elapsedTime.formatted}\n` +
-            `• Investigation Efficiency: ${gameStats.investigationEfficiency}%\n\n` +
-            `We hope you enjoyed your detective adventure!`;
+        const thankYou = this.translationService ?
+            this.translationService.translate('ui.farewell.thank_you', {}, 'Thank you for playing "Where in the World is Nadine Vuan?"!') :
+            'Thank you for playing "Where in the World is Nadine Vuan?"!';
+        const summaryHeader = this.translationService ?
+            this.translationService.translate('ui.farewell.investigation_summary', {}, 'Investigation Summary:') :
+            'Investigation Summary:';
+        const citiesVisited = this.translationService ?
+            this.translationService.translate('ui.farewell.cities_visited', { count: gameStats.citiesVisited }, `Cities Visited: ${gameStats.citiesVisited}`) :
+            `Cities Visited: ${gameStats.citiesVisited}`;
+        const cluesCollected = this.translationService ?
+            this.translationService.translate('ui.farewell.clues_collected', { count: gameStats.cluesCollected }, `Clues Collected: ${gameStats.cluesCollected}`) :
+            `Clues Collected: ${gameStats.cluesCollected}`;
+        const timeTaken = this.translationService ?
+            this.translationService.translate('ui.farewell.time_taken', { time: gameStats.elapsedTime.formatted }, `Time Taken: ${gameStats.elapsedTime.formatted}`) :
+            `Time Taken: ${gameStats.elapsedTime.formatted}`;
+        const efficiency = this.translationService ?
+            this.translationService.translate('ui.farewell.investigation_efficiency', { percentage: gameStats.investigationEfficiency }, `Investigation Efficiency: ${gameStats.investigationEfficiency}%`) :
+            `Investigation Efficiency: ${gameStats.investigationEfficiency}%`;
+        const enjoyedMessage = this.translationService ?
+            this.translationService.translate('ui.farewell.enjoyed_message', {}, 'We hope you enjoyed your detective adventure!') :
+            'We hope you enjoyed your detective adventure!';
+
+        const farewell = `${thankYou}\n\n${summaryHeader}\n• ${citiesVisited}\n• ${cluesCollected}\n• ${timeTaken}\n• ${efficiency}\n\n${enjoyedMessage}`;
 
         alert(farewell);
 
